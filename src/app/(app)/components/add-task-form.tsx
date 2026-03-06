@@ -1,0 +1,69 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { format } from "date-fns";
+import { CalendarIcon, Plus } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { addTask } from "@/lib/actions/tasks";
+
+export function AddTaskForm() {
+  const [title, setTitle] = useState("");
+  const [dueDate, setDueDate] = useState<Date | undefined>();
+  const [isPending, startTransition] = useTransition();
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = title.trim();
+    if (!trimmed) return;
+
+    startTransition(async () => {
+      await addTask(
+        trimmed,
+        dueDate ? format(dueDate, "yyyy-MM-dd") : null
+      );
+      setTitle("");
+      setDueDate(undefined);
+    });
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex items-center gap-2">
+      <Input
+        placeholder="Add a task..."
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="flex-1"
+        disabled={isPending}
+      />
+      <Popover>
+        <PopoverTrigger
+          render={
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className={dueDate ? "text-foreground" : "text-muted-foreground"}
+            />
+          }
+        >
+          <CalendarIcon className="size-4" />
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="end">
+          <Calendar
+            mode="single"
+            selected={dueDate}
+            onSelect={setDueDate}
+          />
+        </PopoverContent>
+      </Popover>
+      <Button type="submit" size="sm" disabled={isPending || !title.trim()}>
+        <Plus className="size-4" />
+        Add
+      </Button>
+    </form>
+  );
+}

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { LogoutButton } from "./logout-button";
 
 export default async function AppLayout({
   children,
@@ -7,11 +8,21 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     redirect("/login");
   }
 
-  return <>{children}</>;
+  return (
+    <div className="mx-auto min-h-screen w-full max-w-2xl px-4">
+      <header className="flex items-center justify-between border-b py-4">
+        <h1 className="text-xl font-bold">Efficient</h1>
+        <LogoutButton />
+      </header>
+      <main className="py-6">{children}</main>
+    </div>
+  );
 }
