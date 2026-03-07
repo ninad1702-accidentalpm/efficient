@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "./logout-button";
+import { NavTabs } from "./components/nav-tabs";
+import { PushNotificationManager } from "./components/push-notification-manager";
 
 export default async function AppLayout({
   children,
@@ -22,6 +24,8 @@ export default async function AppLayout({
         <h1 className="text-xl font-bold">Efficient</h1>
         <LogoutButton />
       </header>
+      <PushNotificationManager />
+      <NavTabs />
       <main className="py-6">{children}</main>
     </div>
   );

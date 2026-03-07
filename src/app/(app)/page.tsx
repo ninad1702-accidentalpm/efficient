@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { TaskList } from "./components/task-list";
 import { AddTaskForm } from "./components/add-task-form";
+import { CheckInTrigger } from "./components/check-in-trigger";
 import type { Task } from "@/lib/types";
 
 export default async function DashboardPage() {
@@ -48,6 +50,9 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <Suspense>
+        <CheckInTrigger />
+      </Suspense>
       <AddTaskForm />
       <TaskList tasks={(tasks as Task[]) ?? []} />
     </div>

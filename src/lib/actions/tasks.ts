@@ -177,6 +177,21 @@ export async function updateTask(
   revalidatePath("/");
 }
 
+export async function logCheckin(type: "morning" | "evening") {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  await supabase.from("activity_log").insert({
+    user_id: user.id,
+    actor: "user",
+    action: "checkin_completed",
+    metadata: { type },
+  });
+}
+
 export async function snoozeTask(taskId: string, snoozeUntil: string) {
   const supabase = await createClient();
   const {

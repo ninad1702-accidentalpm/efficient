@@ -1,0 +1,118 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import type { TaskStatus } from "@/lib/types";
+
+export async function saveScratchPad(content: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  // Upsert: try update first, insert if no rows exist
+  const { data: existing } = await supabase
+    .from("scratch_pad")
+    .select("id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (existing) {
+    const { error } = await supabase
+      .from("scratch_pad")
+      .update({ content })
+      .eq("user_id", user.id);
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase
+      .from("scratch_pad")
+      .insert({ user_id: user.id, content });
+    if (error) throw new Error(error.message);
+  }
+}
+
+export async function confirmSuggestion(
+  suggestionId: string,
+  title: string,
+  dueDate: string | null
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const status: TaskStatus = dueDate ? "pending" : "someday";
+
+  // Create the task
+  const { data: task, error: taskError } = await supabase
+    .from("tasks")
+    .insert({
+      user_id: user.id,
+      title,
+      status,
+      due_date: dueDate,
+      source: "scratch_pad",
+    })
+    .select()
+    .single();
+
+  if (taskError) throw new Error(taskError.message);
+
+  // Update the suggestion
+  const { error: suggError } = await supabase
+    .from("ai_suggestions")
+    .update({ user_action: "accepted", task_id: task.id })
+    .eq("id", suggestionId)
+    .eq("user_id", user.id);
+
+  if (suggError) throw new Error(suggError.message);
+
+  // Log activity
+  await supabase.from("activity_log").insert({
+    user_id: user.id,
+    actor: "ai",
+    action: "task_created",
+    task_id: task.id,
+    task_title_snapshot: title,
+    metadata: { source: "scratch_pad", suggestion_id: suggestionId, due_date: dueDate },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/scratch-pad");
+  return task;
+}
+
+export async function dismissSuggestion(suggestionId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { error } = await supabase
+    .from("ai_suggestions")
+    .update({ user_action: "dismissed" })
+    .eq("id", suggestionId)
+    .eq("user_id", user.id);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/scratch-pad");
+}
+
+export async function updateLastProcessed(content: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { error } = await supabase
+    .from("scratch_pad")
+    .update({ last_processed_content: content })
+    .eq("user_id", user.id);
+
+  if (error) throw new Error(error.message);
+}

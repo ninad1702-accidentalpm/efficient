@@ -12,3 +12,20 @@ export interface Task {
   created_at: string;
   updated_at: string;
 }
+
+export interface AiSuggestion {
+  id: string;
+  user_id: string;
+  suggested_title: string;
+  suggested_due_date: string | null;
+  source_text: string;
+  user_action: "accepted" | "dismissed" | null;
+  task_id: string | null;
+  created_at: string;
+}
+
+export interface PushPayload {
+  title: string;
+  body: string;
+  type: "morning" | "evening";
+}
