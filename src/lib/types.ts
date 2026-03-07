@@ -29,3 +29,25 @@ export interface PushPayload {
   body: string;
   type: "morning" | "evening";
 }
+
+export interface ActivityEntry {
+  id: string;
+  user_id: string;
+  actor: "user" | "ai" | "app";
+  action: string;
+  task_id: string | null;
+  task_title_snapshot: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export const ACTION_LABELS: Record<string, string> = {
+  task_created: "created",
+  task_completed: "closed",
+  task_uncompleted: "reopened",
+  task_deleted: "deleted",
+  task_updated: "updated",
+  task_snoozed: "snoozed",
+  checkin_completed: "completed",
+  checkin_sent: "sent",
+};

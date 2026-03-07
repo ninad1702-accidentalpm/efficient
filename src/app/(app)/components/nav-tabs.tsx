@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 const tabs = [
   { label: "Tasks", href: "/" },
   { label: "Scratch Pad", href: "/scratch-pad" },
+  { label: "Summary", href: "/summary" },
 ];
 
 export function NavTabs() {
