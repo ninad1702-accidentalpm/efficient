@@ -20,6 +20,7 @@ export default function SignupPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -29,6 +30,12 @@ export default function SignupPage() {
     setLoading(true);
     setError(null);
     setMessage(null);
+
+    if (inviteCode !== process.env.NEXT_PUBLIC_INVITE_CODE) {
+      setError("Invalid invite code.");
+      setLoading(false);
+      return;
+    }
 
     const supabase = createClient();
     const { error } = await supabase.auth.signUp({
@@ -72,6 +79,17 @@ export default function SignupPage() {
                 {message}
               </div>
             )}
+            <div className="space-y-2">
+              <Label htmlFor="invite-code">Invite code</Label>
+              <Input
+                id="invite-code"
+                type="text"
+                placeholder="Enter your invite code"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+                required
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
