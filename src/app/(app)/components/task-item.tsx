@@ -43,7 +43,7 @@ export function TaskItem({ task }: TaskItemProps) {
 
   function getDateBadge() {
     if (task.status === "someday") {
-      return <Badge className="bg-purple-500/15 text-purple-400">Someday</Badge>;
+      return <Badge className="border border-purple-500/20 bg-purple-500/15 text-purple-400">Someday</Badge>;
     }
     if (!task.due_date) return null;
 
@@ -60,11 +60,11 @@ export function TaskItem({ task }: TaskItemProps) {
     const today = isToday(dueDate);
 
     if (overdue) {
-      return <Badge variant="destructive">{label}</Badge>;
+      return <Badge className="border border-red-500/20 bg-red-500/15 text-red-400">{label}</Badge>;
     }
     if (today) {
       return (
-        <Badge className="border-amber-500/20 bg-amber-500/15 text-amber-400">
+        <Badge className="border border-amber-500/20 bg-amber-500/15 text-amber-400">
           Due Today
         </Badge>
       );
