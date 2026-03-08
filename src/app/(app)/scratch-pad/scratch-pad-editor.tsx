@@ -33,9 +33,8 @@ export function ScratchPadEditor({
   const [addedCount, setAddedCount] = useState(0);
 
   async function parseContent(savedContent: string, currentLastProcessed: string | null, autoAdd = false) {
-    // Skip if content is empty, unchanged since last processed, or a parse is already running
+    // Skip if content is empty or a parse is already running
     if (!savedContent.trim()) return;
-    if (savedContent === currentLastProcessed) return;
     if (isParsingRef.current) return;
 
     isParsingRef.current = true;
@@ -46,7 +45,7 @@ export function ScratchPadEditor({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           content: savedContent,
-          lastProcessedContent: currentLastProcessed,
+          lastProcessedContent: autoAdd ? currentLastProcessed : null,
         }),
       });
 
@@ -70,8 +69,10 @@ export function ScratchPadEditor({
         }
       }
 
-      await updateLastProcessed(savedContent);
-      setLastProcessed(savedContent);
+      if (autoAdd) {
+        await updateLastProcessed(savedContent);
+        setLastProcessed(savedContent);
+      }
     } catch (error) {
       console.error("Parse error:", error);
     } finally {
