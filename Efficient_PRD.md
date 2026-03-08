@@ -1,7 +1,7 @@
 # EFFICIENT
 
 **Product Requirements Document**
-**Version 1.5 · MVP (Shipped) · March 2026**
+**Version 1.6 · MVP (Shipped) · March 2026**
 
 **Tech Stack:**
 Frontend: Next.js (React, App Router) · Database: Supabase (PostgreSQL) · Auth: Supabase Auth
@@ -115,7 +115,7 @@ A single free-form text area per user. Content is auto-saved on every keystroke 
 
 ### 4.2 To-Do List
 
-Tasks are displayed in three sections on the same screen:
+Tasks are displayed in three collapsible sections on the same screen (all expanded by default, click header to toggle with chevron indicator):
 - **Today** — tasks due today or overdue, sorted by due date
 - **Upcoming** — future-dated and undated (Someday) tasks. An info icon tooltip explains that tasks will automatically move to Today once their due date arrives.
 - **Completed** — all completed tasks, sorted by `completed_at` descending (most recent first)
@@ -408,4 +408,4 @@ The app uses OpenRouter API with model `nvidia/nemotron-3-nano-30b-a3b:free`. Th
 
 ---
 
-*Efficient PRD v1.5 · Updated March 2026 · MVP shipped*
+*Efficient PRD v1.6 · Updated March 2026 · MVP shipped*
