@@ -77,8 +77,6 @@ export function TaskItem({ task }: TaskItemProps) {
       <div
         className={cn(
           "group flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-white/[0.03]",
-          !isCompleted && "border-l-2 border-primary/60",
-          isCompleted && "border-l-2 border-transparent",
           isPending && "opacity-50"
         )}
       >
