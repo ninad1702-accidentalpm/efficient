@@ -1,7 +1,7 @@
 # EFFICIENT
 
 **Product Requirements Document**
-**Version 1.2 · MVP (Shipped) · March 2026**
+**Version 1.3 · MVP (Shipped) · March 2026**
 
 **Tech Stack:**
 Frontend: Next.js (React, App Router) · Database: Supabase (PostgreSQL) · Auth: Supabase Auth
@@ -47,8 +47,11 @@ The app is designed to grow over time — starting as a single-user MVP and expa
 - As a user, I can open the scratch pad and type freely — notes, thoughts, tasks — with no structure required.
 - As a user, every time I edit the scratch pad, the AI automatically scans the new content and suggests tasks to add to my to-do list.
 - As a user, I see a suggestion card for each AI-suggested task before it is added, and I can accept or dismiss it.
+- As a user, I can edit the suggested task title and due date before accepting a suggestion.
 - As a user, if the AI detects a due date in my text (e.g. 'call John on Friday'), the task is pre-filled with that date.
 - As a user, tasks with a future due date do not appear in today's to-do — they appear on the correct day.
+- As a user, if I dismiss suggestions and click "Suggest tasks" again, the AI re-analyzes my scratch pad content.
+- As a user, the AI does not suggest or add tasks that already exist in my to-do list.
 
 ### To-Do List
 
@@ -79,6 +82,7 @@ The app is designed to grow over time — starting as a single-user MVP and expa
 ### Auth
 
 - As a user, I can sign up and log in via email/password using Supabase Auth.
+- As a user, I can start using the app immediately after signing up — no email confirmation required.
 - All my data (tasks, scratch pad, logs) is scoped to my user account.
 - The app is architected for multi-user from day one even if only one user exists in MVP.
 
@@ -90,11 +94,17 @@ The app is designed to grow over time — starting as a single-user MVP and expa
 
 A single free-form text area per user. Content is auto-saved on every keystroke (debounced 1s). On each save, the AI scans the scratch pad content and diffs it against the previously processed version (`last_processed_content`) to find net-new text. If the previous content is a prefix of the current content, only the new suffix is sent to the AI. It extracts candidate tasks and presents them as suggestion cards on the scratch pad page.
 
+**Two task extraction modes:**
+- **"Suggest tasks"** — AI analyzes the full scratch pad content and presents suggestion cards for review. Can be clicked multiple times; dismissed suggestions can be re-suggested. Does not update `last_processed_content`.
+- **"Add tasks"** — AI analyzes only the new content (diff against `last_processed_content`) and immediately adds tasks to the to-do list. Updates `last_processed_content` after adding.
+
 **Suggestion card contains:**
-- Extracted task title
-- Detected due date if any
-- Accept button (green check) → adds task to to-do, logs to `activity_log` and `ai_suggestions`
+- Editable task title (click title or pencil icon to edit inline; Enter to confirm, Escape to revert)
+- Editable due date via date picker (can set, change, or remove)
+- Accept button (green check) → adds task to to-do with edited title/date, logs to `activity_log` and `ai_suggestions`
 - Dismiss button (X) → marks suggestion as dismissed in `ai_suggestions`
+
+**Duplicate prevention:** Before creating suggestions, the API checks all existing tasks and previously accepted suggestions for the user. Any AI-extracted task with a title matching an existing task (case-insensitive) is filtered out. This prevents duplicate tasks when clicking "Suggest tasks" or "Add tasks" multiple times.
 
 **Status indicator:** Shows Saving... → Saved → idle as content is persisted.
 
@@ -112,6 +122,8 @@ Tasks are displayed in three sections on the same screen:
 | `someday` | Active task with no due date |
 | `snoozed` | Hidden until a future date/time, then reverts to pending |
 | `completed` | Done. Shown in completed section |
+
+**Task actions menu:** Each task has a three-dot menu (always visible for mobile usability) with Edit, Snooze, and Delete options.
 
 **Snooze picker** offers quick options (Tomorrow 8am, Next Monday 8am) plus a calendar picker for custom dates. Snoozed tasks are reactivated server-side on page load when `snooze_until` has passed.
 
@@ -272,11 +284,13 @@ All tables include Row Level Security (RLS) policies scoped to `auth.uid()` from
 ### Phase 3 — Scratch Pad & AI Parsing
 
 - Built scratch pad UI with auto-save (debounced 1s)
-- On save, diffs new content against `last_processed_content` (prefix-based diff)
-- Sends diff to OpenRouter API (nvidia/nemotron-3-nano-30b-a3b:free) to extract candidate tasks + dates
-- Renders suggestion cards with accept/dismiss buttons
-- On accept: creates task in Supabase, logs to `activity_log` and marks `ai_suggestions` as accepted
-- On dismiss: marks `ai_suggestions` as dismissed
+- Two modes: "Suggest tasks" (full content, review before adding) and "Add tasks" (diff only, auto-add)
+- "Suggest tasks" always sends full content to AI; "Add tasks" uses prefix-based diff against `last_processed_content`
+- Sends content to OpenRouter API (nvidia/nemotron-3-nano-30b-a3b:free) to extract candidate tasks + dates
+- Renders editable suggestion cards — users can edit title (inline) and due date (date picker) before accepting
+- Server-side duplicate prevention: filters out AI suggestions matching existing task titles or accepted suggestions
+- On accept: creates task in Supabase with edited title/date, logs to `activity_log` and marks `ai_suggestions` as accepted
+- On dismiss: marks `ai_suggestions` as dismissed; user can re-suggest to get the same suggestions back
 
 ### Phase 4 — Push Notifications & Check-ins
 
@@ -308,6 +322,10 @@ All tables include Row Level Security (RLS) policies scoped to `auth.uid()` from
 - Loading skeletons for all 3 tabs
 - Empty states for tasks and activity feed
 - Removed unused boilerplate SVGs from `public/`
+- Task three-dot menu always visible (not hover-only) for mobile usability
+- Sanitized auth error messages — generic user-facing messages instead of raw Supabase errors
+- Signup flow: no email confirmation, direct sign-in after account creation
+- Vercel cron configured for push notification delivery
 
 ---
 
@@ -374,4 +392,4 @@ The app uses OpenRouter API with model `nvidia/nemotron-3-nano-30b-a3b:free`. Th
 
 ---
 
-*Efficient PRD v1.2 · Updated March 2026 · MVP shipped*
+*Efficient PRD v1.3 · Updated March 2026 · MVP shipped*
