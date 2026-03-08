@@ -1,7 +1,7 @@
 # EFFICIENT
 
 **Product Requirements Document**
-**Version 1.3 · MVP (Shipped) · March 2026**
+**Version 1.4 · MVP (Shipped) · March 2026**
 
 **Tech Stack:**
 Frontend: Next.js (React, App Router) · Database: Supabase (PostgreSQL) · Auth: Supabase Auth
@@ -104,7 +104,11 @@ A single free-form text area per user. Content is auto-saved on every keystroke 
 - Accept button (green check) → adds task to to-do with edited title/date, logs to `activity_log` and `ai_suggestions`
 - Dismiss button (X) → marks suggestion as dismissed in `ai_suggestions`
 
-**Duplicate prevention:** Before creating suggestions, the API checks all existing tasks and previously accepted suggestions for the user. Any AI-extracted task with a title matching an existing task (case-insensitive) is filtered out. This prevents duplicate tasks when clicking "Suggest tasks" or "Add tasks" multiple times.
+**Duplicate prevention:** Before creating suggestions, the API checks all existing tasks and previously accepted suggestions for the user. A task is considered a duplicate only if both the title (case-insensitive) AND due date match an existing entry. This allows tasks with the same title but different due dates (e.g. "buy milk today" vs "buy milk day after tomorrow") to coexist.
+
+**Scratch pad clearing:**
+- **"Add tasks" mode:** The scratch pad is cleared entirely after tasks are auto-added, since all content has been processed.
+- **"Suggest tasks" mode:** The AI returns the exact source text snippet for each extracted task. When a suggestion is accepted, only that snippet is removed from the scratch pad. Dismissed suggestions leave the scratch pad content intact.
 
 **Status indicator:** Shows Saving... → Saved → idle as content is persisted.
 
@@ -129,7 +133,7 @@ Tasks are displayed in three sections on the same screen:
 
 ### 4.3 Push Notifications & Check-ins
 
-The app shows a notification permission banner on first load (if not already subscribed). A service worker (`/sw.js`) handles push events and notification clicks. Notifications are scheduled server-side via a cron endpoint (`/api/cron/send-notifications`) that checks each user's configured times with a ±7 minute tolerance window.
+The app shows a notification permission banner for all users who haven't subscribed. The banner is persistent — dismissing it hides it for 24 hours, after which it resurfaces on the next visit. On iOS devices not installed as a PWA, the banner shows "Add to Home Screen" instructions (tap Share → "Add to Home Screen") instead of the Enable button, since iOS requires PWA installation before push notifications work. Once installed and reopened, users see the standard "Enable notifications" banner. A service worker (`/sw.js`) handles push events and notification clicks. Notifications are scheduled server-side via a cron endpoint (`/api/cron/send-notifications`) that checks each user's configured times with a ±7 minute tolerance window.
 
 **Morning Check-in Flow:**
 - Notification title: "Good morning!"
@@ -347,7 +351,7 @@ The app uses OpenRouter API with model `nvidia/nemotron-3-nano-30b-a3b:free`. Th
 > - Return an empty array if no actionable tasks are found
 > - Do NOT include observations, ideas, or vague statements as tasks
 >
-> Return ONLY a valid JSON array with objects containing "title" (string) and "due_date" (string YYYY-MM-DD or null). No other text.
+> Return ONLY a valid JSON array with objects containing "title" (string), "due_date" (string YYYY-MM-DD or null), and "source_text" (the exact words/sentence from the input that this task was extracted from — copy it verbatim). No other text.
 >
 > Text to analyze:
 > """
@@ -388,8 +392,8 @@ The app uses OpenRouter API with model `nvidia/nemotron-3-nano-30b-a3b:free`. Th
 ### Resolved Decisions
 
 - **Push notification timezone handling:** Resolved — each user has a configurable timezone and notification times in `profiles`. The cron job runs frequently and checks if the current local time is within ±7 minutes of the user's configured times.
-- **iOS Safari push limitations:** Resolved — the app sets `apple-mobile-web-app-capable` meta tag and includes iOS-specific PWA metadata for Add to Home Screen support.
+- **iOS Safari push limitations:** Resolved — iOS users who haven't installed the PWA see "Add to Home Screen" instructions in the notification banner. Once installed, the standard Enable button appears. The app sets `apple-mobile-web-app-capable` meta tag and includes iOS-specific PWA metadata.
 
 ---
 
-*Efficient PRD v1.3 · Updated March 2026 · MVP shipped*
+*Efficient PRD v1.4 · Updated March 2026 · MVP shipped*
