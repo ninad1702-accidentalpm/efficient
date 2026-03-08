@@ -53,7 +53,7 @@ Rules:
 - Return an empty array if no actionable tasks are found
 - Do NOT include observations, ideas, or vague statements as tasks
 
-Return ONLY a valid JSON array with objects containing "title" (string) and "due_date" (string YYYY-MM-DD or null). No other text.
+Return ONLY a valid JSON array with objects containing "title" (string), "due_date" (string YYYY-MM-DD or null), and "source_text" (the exact words/sentence from the input that this task was extracted from — copy it verbatim). No other text.
 
 Text to analyze:
 """
@@ -131,11 +131,11 @@ ${textToProcess}
 
     // Save suggestions to DB
     const rows = newSuggestions.map(
-      (s: { title: string; due_date: string | null }) => ({
+      (s: { title: string; due_date: string | null; source_text?: string }) => ({
         user_id: user.id,
         suggested_title: s.title,
         suggested_due_date: s.due_date || null,
-        source_text: textToProcess,
+        source_text: s.source_text || textToProcess,
         user_action: null,
         task_id: null,
       })
