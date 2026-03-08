@@ -21,22 +21,17 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setMessage(null);
 
     const supabase = createClient();
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
     });
 
     if (error) {
@@ -45,8 +40,8 @@ export default function SignupPage() {
       return;
     }
 
-    setMessage("Check your email to confirm your account.");
-    setLoading(false);
+    router.push("/");
+    router.refresh();
   }
 
   return (
@@ -65,11 +60,6 @@ export default function SignupPage() {
             {error && (
               <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
                 {error}
-              </div>
-            )}
-            {message && (
-              <div className="rounded-md bg-primary/10 p-3 text-sm text-primary">
-                {message}
               </div>
             )}
             <div className="space-y-2">
