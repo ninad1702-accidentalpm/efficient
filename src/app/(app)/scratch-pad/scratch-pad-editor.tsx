@@ -31,6 +31,22 @@ export function ScratchPadEditor({
   }, [content]);
 
   const [addedCount, setAddedCount] = useState(0);
+  const acceptedCountRef = useRef(0);
+  const hadSuggestionsRef = useRef(initialSuggestions.length > 0);
+
+  // When all suggestions are resolved and at least one was accepted, clear the pad
+  useEffect(() => {
+    if (suggestions.length > 0) {
+      hadSuggestionsRef.current = true;
+    } else if (hadSuggestionsRef.current && acceptedCountRef.current > 0) {
+      setContent("");
+      latestContentRef.current = "";
+      saveScratchPad("");
+      setLastProcessed(null);
+      acceptedCountRef.current = 0;
+      hadSuggestionsRef.current = false;
+    }
+  }, [suggestions]);
 
   async function parseContent(savedContent: string, currentLastProcessed: string | null, autoAdd = false) {
     // Skip if content is empty or a parse is already running
@@ -64,6 +80,10 @@ export function ScratchPadEditor({
           }
           setAddedCount(newSuggestions.length);
           setTimeout(() => setAddedCount(0), 3000);
+          // Clear the scratch pad after adding tasks
+          setContent("");
+          latestContentRef.current = "";
+          await saveScratchPad("");
         } else {
           setSuggestions((prev) => [...newSuggestions, ...prev]);
         }
@@ -124,7 +144,8 @@ export function ScratchPadEditor({
     debouncedSave(value);
   }
 
-  function handleResolved(id: string) {
+  function handleResolved(id: string, accepted: boolean) {
+    if (accepted) acceptedCountRef.current += 1;
     setSuggestions((prev) => prev.filter((s) => s.id !== id));
   }
 

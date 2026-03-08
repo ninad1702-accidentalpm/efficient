@@ -16,7 +16,7 @@ export function SuggestionCard({
   onResolved,
 }: {
   suggestion: AiSuggestion;
-  onResolved: (id: string) => void;
+  onResolved: (id: string, accepted: boolean) => void;
 }) {
   const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
@@ -34,14 +34,14 @@ export function SuggestionCard({
         title,
         dueDate ? format(dueDate, "yyyy-MM-dd") : null
       );
-      onResolved(suggestion.id);
+      onResolved(suggestion.id, true);
     });
   }
 
   function handleDismiss() {
     startTransition(async () => {
       await dismissSuggestion(suggestion.id);
-      onResolved(suggestion.id);
+      onResolved(suggestion.id, false);
     });
   }
 
