@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ListPlus, Sparkles } from "lucide-react";
+import { CheckCircle2, ListPlus, Sparkles } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { SuggestionCard } from "./suggestion-card";
@@ -170,12 +170,13 @@ export function ScratchPadEditor({
             <ListPlus className="size-3.5" />
             {status === "adding" ? "Adding tasks..." : "Add tasks"}
           </Button>
-          {addedCount > 0 && (
-            <span className="text-xs text-muted-foreground">
-              {addedCount} task{addedCount === 1 ? "" : "s"} added
-            </span>
-          )}
         </div>
+        {addedCount > 0 && (
+          <div className="flex items-center gap-2 rounded-lg bg-green-500/10 px-4 py-3 text-sm font-medium text-green-400">
+            <CheckCircle2 className="size-4 shrink-0" />
+            {addedCount} task{addedCount === 1 ? "" : "s"} added to your to-do list
+          </div>
+        )}
       </div>
 
       {suggestions.length > 0 && (
