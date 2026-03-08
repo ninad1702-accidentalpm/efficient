@@ -50,7 +50,7 @@ export function PushNotificationManager() {
   if (!showBanner) return null;
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border bg-muted/50 px-4 py-3 text-sm">
+    <div className="flex items-center gap-3 rounded-xl border-primary/10 bg-primary/[0.06] border px-4 py-3 text-sm">
       <BellIcon className="size-4 shrink-0 text-muted-foreground" />
       <p className="flex-1">
         Enable notifications to get morning &amp; evening check-ins

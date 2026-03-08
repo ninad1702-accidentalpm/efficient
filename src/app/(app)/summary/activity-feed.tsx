@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { format, isToday, isYesterday } from "date-fns";
+import { useCallback, useEffect, useState } from "react";
+import { addDays, format, isToday, isYesterday, startOfDay } from "date-fns";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import type { ActivityEntry } from "@/lib/types";
 import { ActivityItem } from "./activity-item";
+import { Button } from "@/components/ui/button";
 
 function formatDayHeader(date: Date): string {
   if (isToday(date)) return "Today";
@@ -11,126 +13,99 @@ function formatDayHeader(date: Date): string {
   return format(date, "MMM d, yyyy");
 }
 
-function groupByDate(entries: ActivityEntry[]): Map<string, ActivityEntry[]> {
-  const groups = new Map<string, ActivityEntry[]>();
-  for (const entry of entries) {
-    const date = new Date(entry.created_at);
-    const key = format(date, "yyyy-MM-dd");
-    const existing = groups.get(key);
-    if (existing) {
-      existing.push(entry);
-    } else {
-      groups.set(key, [entry]);
-    }
-  }
-  return groups;
-}
-
 export function ActivityFeed() {
+  const [currentDate, setCurrentDate] = useState(() => startOfDay(new Date()));
   const [entries, setEntries] = useState<ActivityEntry[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const sentinelRef = useRef<HTMLDivElement>(null);
+  const [error, setError] = useState(false);
 
-  const fetchPage = useCallback(async (cursor?: string) => {
-    const url = cursor
-      ? `/api/activity?cursor=${encodeURIComponent(cursor)}`
-      : "/api/activity";
-    const res = await fetch(url);
-    if (!res.ok) return;
+  const fetchDay = useCallback(async (date: Date) => {
+    const dateStr = format(date, "yyyy-MM-dd");
+    const res = await fetch(`/api/activity?date=${dateStr}`);
+    if (!res.ok) throw new Error("Failed to load activity");
     const data = await res.json();
-    return data as { entries: ActivityEntry[]; nextCursor: string | null };
+    return data.entries as ActivityEntry[];
   }, []);
 
   useEffect(() => {
-    fetchPage().then((data) => {
-      if (data) {
-        setEntries(data.entries);
-        setNextCursor(data.nextCursor);
-      }
-      setLoading(false);
-    });
-  }, [fetchPage]);
+    setLoading(true);
+    setError(false);
+    fetchDay(currentDate)
+      .then((data) => setEntries(data))
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, [currentDate, fetchDay]);
 
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
+  const goToPreviousDay = () => setCurrentDate((d) => addDays(d, -1));
+  const goToNextDay = () => setCurrentDate((d) => addDays(d, 1));
 
-    const observer = new IntersectionObserver(
-      (observerEntries) => {
-        if (observerEntries[0].isIntersecting && nextCursor && !loadingMore) {
-          setLoadingMore(true);
-          fetchPage(nextCursor).then((data) => {
-            if (data) {
-              setEntries((prev) => [...prev, ...data.entries]);
-              setNextCursor(data.nextCursor);
-            }
-            setLoadingMore(false);
-          });
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [nextCursor, loadingMore, fetchPage]);
-
-  if (loading) {
-    return (
-      <div className="space-y-3">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 px-3 py-2">
-            <div className="h-5 w-12 animate-pulse rounded-full bg-muted" />
-            <div className="h-4 flex-1 animate-pulse rounded bg-muted" />
-            <div className="h-4 w-16 animate-pulse rounded bg-muted" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (entries.length === 0) {
-    return (
-      <p className="py-12 text-center text-muted-foreground">
-        No activity yet — start by adding some tasks!
-      </p>
-    );
-  }
-
-  const grouped = groupByDate(entries);
+  const viewingToday = isToday(currentDate);
 
   return (
-    <div className="space-y-6">
-      {Array.from(grouped.entries()).map(([dateKey, dayEntries]) => {
-        const date = new Date(dateKey + "T00:00:00");
-        return (
-          <section key={dateKey}>
-            <h3 className="mb-2 text-sm font-medium text-muted-foreground">
-              {formatDayHeader(date)}
-            </h3>
-            <div className="divide-y">
-              {dayEntries.map((entry) => (
-                <ActivityItem key={entry.id} entry={entry} />
-              ))}
+    <div className="space-y-4">
+      <div className="flex items-center justify-center gap-2">
+        <Button variant="ghost" size="icon" onClick={goToPreviousDay}>
+          <ChevronLeftIcon className="h-4 w-4" />
+        </Button>
+        <span className="min-w-[140px] text-center text-lg font-semibold">
+          {formatDayHeader(currentDate)}
+        </span>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={goToNextDay}
+          disabled={viewingToday}
+        >
+          <ChevronRightIcon className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {loading && (
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 px-3 py-2">
+              <div className="h-5 w-12 animate-pulse rounded-full bg-muted" />
+              <div className="h-4 flex-1 animate-pulse rounded bg-muted" />
+              <div className="h-4 w-16 animate-pulse rounded bg-muted" />
             </div>
-          </section>
-        );
-      })}
-
-      <div ref={sentinelRef} className="h-4" />
-
-      {loadingMore && (
-        <div className="flex justify-center py-4">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-muted border-t-foreground" />
+          ))}
         </div>
       )}
 
-      {!nextCursor && entries.length > 0 && (
-        <p className="pb-4 text-center text-sm text-muted-foreground">
-          No more activity
+      {error && !loading && (
+        <div className="flex flex-col items-center gap-3 py-12 text-center">
+          <p className="text-sm text-muted-foreground">
+            Failed to load activity
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setLoading(true);
+              setError(false);
+              fetchDay(currentDate)
+                .then((data) => setEntries(data))
+                .catch(() => setError(true))
+                .finally(() => setLoading(false));
+            }}
+          >
+            Retry
+          </Button>
+        </div>
+      )}
+
+      {!loading && !error && entries.length === 0 && (
+        <p className="py-12 text-center text-muted-foreground">
+          No activity on this day
         </p>
+      )}
+
+      {!loading && !error && entries.length > 0 && (
+        <div className="divide-y">
+          {entries.map((entry) => (
+            <ActivityItem key={entry.id} entry={entry} />
+          ))}
+        </div>
       )}
     </div>
   );

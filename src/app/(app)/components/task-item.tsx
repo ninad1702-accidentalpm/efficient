@@ -43,7 +43,7 @@ export function TaskItem({ task }: TaskItemProps) {
 
   function getDateBadge() {
     if (task.status === "someday") {
-      return <Badge variant="secondary">Someday</Badge>;
+      return <Badge className="bg-purple-500/15 text-purple-400">Someday</Badge>;
     }
     if (!task.due_date) return null;
 
@@ -64,7 +64,7 @@ export function TaskItem({ task }: TaskItemProps) {
     }
     if (today) {
       return (
-        <Badge className="border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+        <Badge className="border-amber-500/20 bg-amber-500/15 text-amber-400">
           Due Today
         </Badge>
       );
@@ -76,7 +76,9 @@ export function TaskItem({ task }: TaskItemProps) {
     <>
       <div
         className={cn(
-          "group flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-muted/50",
+          "group flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-white/[0.03]",
+          !isCompleted && "border-l-2 border-primary/60",
+          isCompleted && "border-l-2 border-transparent",
           isPending && "opacity-50"
         )}
       >

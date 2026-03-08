@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Sparkles } from "lucide-react";
+import { ListPlus, Sparkles } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { SuggestionCard } from "./suggestion-card";
-import { saveScratchPad, updateLastProcessed } from "@/lib/actions/scratch-pad";
+import { saveScratchPad, updateLastProcessed, confirmSuggestion } from "@/lib/actions/scratch-pad";
 import type { AiSuggestion } from "@/lib/types";
 
 export function ScratchPadEditor({
@@ -19,7 +20,7 @@ export function ScratchPadEditor({
   const [content, setContent] = useState(initialContent);
   const [lastProcessed, setLastProcessed] = useState(initialLastProcessed);
   const [suggestions, setSuggestions] = useState(initialSuggestions);
-  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "parsing">("idle");
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "parsing" | "adding">("idle");
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
   const isParsingRef = useRef(false);
   const latestContentRef = useRef(content);
@@ -29,14 +30,16 @@ export function ScratchPadEditor({
     latestContentRef.current = content;
   }, [content]);
 
-  async function parseContent(savedContent: string, currentLastProcessed: string | null) {
+  const [addedCount, setAddedCount] = useState(0);
+
+  async function parseContent(savedContent: string, currentLastProcessed: string | null, autoAdd = false) {
     // Skip if content is empty, unchanged since last processed, or a parse is already running
     if (!savedContent.trim()) return;
     if (savedContent === currentLastProcessed) return;
     if (isParsingRef.current) return;
 
     isParsingRef.current = true;
-    setStatus("parsing");
+    setStatus(autoAdd ? "adding" : "parsing");
     try {
       const res = await fetch("/api/parse-scratch-pad", {
         method: "POST",
@@ -55,7 +58,16 @@ export function ScratchPadEditor({
       const { suggestions: newSuggestions } = await res.json();
 
       if (newSuggestions && newSuggestions.length > 0) {
-        setSuggestions((prev) => [...newSuggestions, ...prev]);
+        if (autoAdd) {
+          // Automatically confirm each suggestion as a task
+          for (const s of newSuggestions) {
+            await confirmSuggestion(s.id, s.suggested_title, s.suggested_due_date);
+          }
+          setAddedCount(newSuggestions.length);
+          setTimeout(() => setAddedCount(0), 3000);
+        } else {
+          setSuggestions((prev) => [...newSuggestions, ...prev]);
+        }
       }
 
       await updateLastProcessed(savedContent);
@@ -68,7 +80,7 @@ export function ScratchPadEditor({
     }
   }
 
-  // Debounced auto-save, then auto-parse
+  // Debounced auto-save (no auto-parse — user triggers parsing via button)
   const debouncedSave = useCallback(
     (value: string) => {
       if (saveTimeoutRef.current) {
@@ -79,16 +91,7 @@ export function ScratchPadEditor({
         try {
           await saveScratchPad(value);
           setStatus("saved");
-          // Chain auto-parse after successful save
-          // Use the latest content and lastProcessed at the time of parse
-          const currentContent = latestContentRef.current;
-          // Small delay so "Saved" is visible briefly
-          setTimeout(() => {
-            setLastProcessed((prev) => {
-              parseContent(currentContent, prev);
-              return prev;
-            });
-          }, 400);
+          setTimeout(() => setStatus("idle"), 1000);
         } catch {
           setStatus("idle");
         }
@@ -96,6 +99,14 @@ export function ScratchPadEditor({
     },
     []
   );
+
+  function handleSuggestTasks() {
+    parseContent(latestContentRef.current, lastProcessed);
+  }
+
+  function handleAddTasks() {
+    parseContent(latestContentRef.current, lastProcessed, true);
+  }
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -121,19 +132,13 @@ export function ScratchPadEditor({
       ? "Saving..."
       : status === "saved"
         ? "Saved"
-        : status === "parsing"
-          ? "Looking for tasks..."
-          : "";
+        : "";
 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label htmlFor="scratch-pad" className="text-sm font-medium">
-            Jot down your thoughts
-          </label>
-          <span className="text-xs text-muted-foreground flex items-center gap-1">
-            {status === "parsing" && <Sparkles className="size-3 animate-pulse" />}
+        <div className="flex items-center justify-end">
+          <span className="text-xs text-muted-foreground">
             {statusText}
           </span>
         </div>
@@ -141,9 +146,35 @@ export function ScratchPadEditor({
           id="scratch-pad"
           value={content}
           onChange={handleChange}
-          placeholder="Dump your thoughts here... meetings, ideas, things to do. AI will extract actionable tasks for you."
-          className="min-h-[200px] resize-y"
+          placeholder="Dump your thoughts here... meetings, ideas, things to do. Use 'Suggest tasks' to review before adding, or 'Add tasks' to send them straight to your to-do list."
+          className="min-h-[300px] resize-y"
         />
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={handleSuggestTasks}
+            disabled={status === "parsing" || status === "adding" || status === "saving" || !content.trim()}
+            size="sm"
+            className="gap-1.5"
+          >
+            <Sparkles className="size-3.5" />
+            {status === "parsing" ? "Looking for tasks..." : "Suggest tasks"}
+          </Button>
+          <Button
+            onClick={handleAddTasks}
+            disabled={status === "parsing" || status === "adding" || status === "saving" || !content.trim()}
+            size="sm"
+            variant="outline"
+            className="gap-1.5"
+          >
+            <ListPlus className="size-3.5" />
+            {status === "adding" ? "Adding tasks..." : "Add tasks"}
+          </Button>
+          {addedCount > 0 && (
+            <span className="text-xs text-muted-foreground">
+              {addedCount} task{addedCount === 1 ? "" : "s"} added
+            </span>
+          )}
+        </div>
       </div>
 
       {suggestions.length > 0 && (

@@ -5,16 +5,16 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { label: "Tasks", href: "/" },
-  { label: "Scratch Pad", href: "/scratch-pad" },
-  { label: "Summary", href: "/summary" },
+  { label: "Scratch pad", href: "/scratch-pad" },
+  { label: "To-do list", href: "/" },
+  { label: "Task log", href: "/summary" },
 ];
 
 export function NavTabs() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex gap-1 border-b">
+    <nav className="mt-4 flex rounded-full bg-surface p-1">
       {tabs.map((tab) => {
         const isActive =
           tab.href === "/"
@@ -26,10 +26,10 @@ export function NavTabs() {
             key={tab.href}
             href={tab.href}
             className={cn(
-              "px-4 py-2 text-sm font-medium transition-colors -mb-px",
+              "flex-1 text-center px-4 py-2 text-sm font-medium transition-colors rounded-full",
               isActive
-                ? "border-b-2 border-primary text-foreground"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
             )}
           >
             {tab.label}

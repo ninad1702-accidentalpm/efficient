@@ -45,12 +45,13 @@ export function AddTaskForm() {
             <Button
               type="button"
               variant="outline"
-              size="icon"
-              className={dueDate ? "text-foreground" : "text-muted-foreground"}
+              size="sm"
+              className={`gap-2 ${dueDate ? "text-foreground" : "text-muted-foreground"}`}
             />
           }
         >
           <CalendarIcon className="size-4" />
+          {dueDate ? format(dueDate, "MMM d") : "Due date"}
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="end">
           <Calendar

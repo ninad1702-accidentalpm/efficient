@@ -20,8 +20,8 @@ export default async function AppLayout({
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-2xl px-4">
-      <header className="flex items-center justify-between border-b py-4">
-        <h1 className="text-xl font-bold">Efficient</h1>
+      <header className="flex items-center justify-between border-b border-white/[0.06] py-5">
+        <h1 className="text-xl font-semibold tracking-tight">Efficient</h1>
         <LogoutButton />
       </header>
       <PushNotificationManager />
