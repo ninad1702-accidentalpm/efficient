@@ -40,7 +40,7 @@ export default function SignupPage() {
     });
 
     if (error) {
-      setError(error.message);
+      setError("Something went wrong. Please check your details and try again.");
       setLoading(false);
       return;
     }
