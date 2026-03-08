@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { isToday, isBefore, startOfDay, parseISO } from "date-fns";
-import { InfoIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronUpIcon, InfoIcon } from "lucide-react";
 import { TaskItem } from "./task-item";
 import {
   Tooltip,
@@ -16,6 +17,10 @@ interface TaskListProps {
 }
 
 export function TaskList({ tasks }: TaskListProps) {
+  const [todayOpen, setTodayOpen] = useState(true);
+  const [upcomingOpen, setUpcomingOpen] = useState(true);
+  const [completedOpen, setCompletedOpen] = useState(true);
+
   const pendingTasks = tasks.filter(
     (t) => t.status === "pending" || t.status === "someday"
   );
@@ -46,27 +51,46 @@ export function TaskList({ tasks }: TaskListProps) {
     return 0;
   });
 
+  const ChevronIcon = ({ open }: { open: boolean }) =>
+    open ? (
+      <ChevronDownIcon className="size-3.5" />
+    ) : (
+      <ChevronUpIcon className="size-3.5" />
+    );
+
   return (
     <div className="space-y-4">
       <div className="rounded-xl bg-surface p-3">
-        <h2 className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <button
+          onClick={() => setTodayOpen((v) => !v)}
+          className="flex w-full items-center gap-1.5 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+        >
+          <ChevronIcon open={todayOpen} />
           Today ({todayTasks.length})
-        </h2>
-        <div className="mt-1">
-          {todayTasks.length === 0 ? (
-            <p className="px-3 py-4 text-center text-sm text-muted-foreground">
-              Nothing due today — nice!
-            </p>
-          ) : (
-            todayTasks.map((task) => <TaskItem key={task.id} task={task} />)
-          )}
-        </div>
+        </button>
+        {todayOpen && (
+          <div className="mt-1">
+            {todayTasks.length === 0 ? (
+              <p className="px-3 py-4 text-center text-sm text-muted-foreground">
+                Nothing due today — nice!
+              </p>
+            ) : (
+              todayTasks.map((task) => <TaskItem key={task.id} task={task} />)
+            )}
+          </div>
+        )}
       </div>
 
       {upcomingTasks.length > 0 && (
         <div className="rounded-xl bg-surface p-3">
-          <h2 className="flex items-center gap-1.5 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Upcoming ({upcomingTasks.length})
+          <div className="flex items-center gap-1.5 px-3">
+            <button
+              onClick={() => setUpcomingOpen((v) => !v)}
+              className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+            >
+              <ChevronIcon open={upcomingOpen} />
+              Upcoming ({upcomingTasks.length})
+            </button>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger className="cursor-help">
@@ -77,23 +101,31 @@ export function TaskList({ tasks }: TaskListProps) {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          </h2>
-          <div className="mt-1">
-            {upcomingTasks.map((task) => <TaskItem key={task.id} task={task} />)}
           </div>
+          {upcomingOpen && (
+            <div className="mt-1">
+              {upcomingTasks.map((task) => <TaskItem key={task.id} task={task} />)}
+            </div>
+          )}
         </div>
       )}
 
       {completedTasks.length > 0 && (
         <div className="rounded-xl bg-surface-muted p-3">
-          <h2 className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <button
+            onClick={() => setCompletedOpen((v) => !v)}
+            className="flex w-full items-center gap-1.5 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+          >
+            <ChevronIcon open={completedOpen} />
             Completed ({completedTasks.length})
-          </h2>
-          <div className="mt-1">
-            {completedTasks.map((task) => (
-              <TaskItem key={task.id} task={task} />
-            ))}
-          </div>
+          </button>
+          {completedOpen && (
+            <div className="mt-1">
+              {completedTasks.map((task) => (
+                <TaskItem key={task.id} task={task} />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
