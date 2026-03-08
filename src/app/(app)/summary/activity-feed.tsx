@@ -6,6 +6,8 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import type { ActivityEntry } from "@/lib/types";
 import { ActivityItem } from "./activity-item";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 
 function formatDayHeader(date: Date): string {
   if (isToday(date)) return "Today";
@@ -39,6 +41,7 @@ export function ActivityFeed() {
   const goToPreviousDay = () => setCurrentDate((d) => addDays(d, -1));
   const goToNextDay = () => setCurrentDate((d) => addDays(d, 1));
 
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const viewingToday = isToday(currentDate);
 
   return (
@@ -47,9 +50,25 @@ export function ActivityFeed() {
         <Button variant="ghost" size="icon" onClick={goToPreviousDay}>
           <ChevronLeftIcon className="h-4 w-4" />
         </Button>
-        <span className="min-w-[140px] text-center text-lg font-semibold">
-          {formatDayHeader(currentDate)}
-        </span>
+        <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+          <PopoverTrigger className="min-w-[140px] cursor-pointer rounded-md px-2 py-1 text-center text-lg font-semibold hover:bg-muted">
+            {formatDayHeader(currentDate)}
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="center">
+            <Calendar
+              mode="single"
+              selected={currentDate}
+              onSelect={(date) => {
+                if (date) {
+                  setCurrentDate(startOfDay(date));
+                  setCalendarOpen(false);
+                }
+              }}
+              disabled={{ after: new Date() }}
+              defaultMonth={currentDate}
+            />
+          </PopoverContent>
+        </Popover>
         <Button
           variant="ghost"
           size="icon"
