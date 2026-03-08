@@ -42,12 +42,12 @@ export interface ActivityEntry {
 }
 
 export const ACTION_LABELS: Record<string, string> = {
-  task_created: "created",
-  task_completed: "closed",
-  task_uncompleted: "reopened",
-  task_deleted: "deleted",
-  task_updated: "updated",
-  task_snoozed: "snoozed",
-  checkin_completed: "completed",
-  checkin_sent: "sent",
+  task_created: "Created",
+  task_completed: "Closed",
+  task_uncompleted: "Reopened",
+  task_deleted: "Deleted",
+  task_updated: "Updated",
+  task_snoozed: "Snoozed",
+  checkin_completed: "Completed",
+  checkin_sent: "Sent",
 };

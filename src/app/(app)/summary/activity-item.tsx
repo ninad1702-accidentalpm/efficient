@@ -11,12 +11,12 @@ function getActionDescription(entry: ActivityEntry): string {
 
   if (entry.action === "checkin_completed") {
     const type = (entry.metadata as Record<string, string> | null)?.type;
-    return `completed ${type ?? ""} check-in`.trim();
+    return `Completed ${type ?? ""} check-in`.trim();
   }
 
   if (entry.action === "checkin_sent") {
     const type = (entry.metadata as Record<string, string> | null)?.type;
-    return `sent ${type ?? ""} check-in reminder`.trim();
+    return `Sent ${type ?? ""} check-in reminder`.trim();
   }
 
   if (entry.task_title_snapshot) {
