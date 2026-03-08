@@ -53,9 +53,9 @@ export function TaskList({ tasks }: TaskListProps) {
 
   const ChevronIcon = ({ open }: { open: boolean }) =>
     open ? (
-      <ChevronDownIcon className="size-3.5" />
-    ) : (
       <ChevronUpIcon className="size-3.5" />
+    ) : (
+      <ChevronDownIcon className="size-3.5" />
     );
 
   return (
