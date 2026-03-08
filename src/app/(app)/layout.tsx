@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "./logout-button";
 import { NavTabs } from "./components/nav-tabs";
 import { PushNotificationManager } from "./components/push-notification-manager";
+import { TimezoneSync } from "./components/timezone-sync";
 
 export default async function AppLayout({
   children,
@@ -24,6 +25,7 @@ export default async function AppLayout({
         <h1 className="text-xl font-semibold tracking-tight">Efficient</h1>
         <LogoutButton />
       </header>
+      <TimezoneSync />
       <PushNotificationManager />
       <NavTabs />
       <main className="py-6">{children}</main>
