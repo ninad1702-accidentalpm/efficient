@@ -1,7 +1,7 @@
 # EFFICIENT
 
 **Product Requirements Document**
-**Version 1.4 · MVP (Shipped) · March 2026**
+**Version 1.5 · MVP (Shipped) · March 2026**
 
 **Tech Stack:**
 Frontend: Next.js (React, App Router) · Database: Supabase (PostgreSQL) · Auth: Supabase Auth
@@ -24,7 +24,7 @@ The app is designed to grow over time — starting as a single-user MVP and expa
 - Give users a frictionless capture layer (scratch pad) for any thought or task
 - Maintain a clean, structured to-do list with pending and completed tasks
 - Automatically parse scratch pad entries into tasks using AI, with user review
-- Send morning and evening check-in push notifications (times configurable per user, defaults: 8am / 8pm)
+- Send morning and evening check-in push notifications (times configurable per user, defaults: 8am / 9pm)
 - Log all app-initiated and user-initiated changes in a day-by-day activity feed
 - Support Someday and Snoozed states for undated tasks
 - Build with Supabase Auth from day one to support multi-user in future
@@ -67,7 +67,7 @@ The app is designed to grow over time — starting as a single-user MVP and expa
 - As a user, I receive a morning push notification at my configured morning time (default 8am) every day.
 - When I open the morning check-in, the app shows my pending tasks and asks: which of these are done?
 - I can mark tasks complete directly in the check-in flow, and I can add new tasks from there too.
-- As a user, I receive an evening push notification at my configured evening time (default 8pm) every day.
+- As a user, I receive an evening push notification at my configured evening time (default 9pm) every day.
 - When I open the evening check-in, the app again shows pending tasks and asks me to mark any completed.
 
 ### Daily Summary / Log
@@ -75,6 +75,7 @@ The app is designed to grow over time — starting as a single-user MVP and expa
 - As a user, I have a dedicated Summary tab.
 - This tab shows a single day's activity at a time, defaulting to today.
 - I can navigate between days using left/right arrow buttons. The date header shows "Today", "Yesterday", or a formatted date (e.g. "Mar 5, 2026").
+- I can click the date label to open a calendar and jump to any specific day.
 - The right arrow is disabled when viewing today (cannot navigate into the future).
 - Empty days show a "No activity on this day" message.
 - Each log entry shows: timestamp, actor badge (You or Efficient), action description, and the task affected.
@@ -127,6 +128,15 @@ Tasks are displayed in three sections on the same screen:
 | `snoozed` | Hidden until a future date/time, then reverts to pending |
 | `completed` | Done. Shown in completed section |
 
+**Date badges:** Each task shows a colored badge indicating its due status:
+- **Overdue** — red border + red tinted background (e.g. "Due Mar 7")
+- **Due Today** — amber border + amber tinted background ("Due Today")
+- **Someday** — purple border + purple tinted background ("Someday")
+- **Future** — outline border (e.g. "Due Mar 15")
+- **Completed** — secondary/muted styling
+
+**Date pickers:** All calendar date pickers throughout the app highlight today's date with a primary-colored ring outline for easy reference.
+
 **Task actions menu:** Each task has a three-dot menu (always visible for mobile usability) with Edit, Snooze, and Delete options.
 
 **Snooze picker** offers quick options (Tomorrow 8am, Next Monday 8am) plus a calendar picker for custom dates. Snoozed tasks are reactivated server-side on page load when `snooze_until` has passed.
@@ -160,6 +170,7 @@ A dedicated Summary tab showing a single day's activity at a time with day-by-da
 **Navigation header (centered):**
 - Left arrow button | date label | right arrow button
 - Date label shows "Today", "Yesterday", or formatted date (e.g. "Mar 5, 2026")
+- Clicking the date label opens a calendar popover to jump to any specific day (future dates disabled)
 - Defaults to today on load
 - Right arrow is disabled when viewing today (cannot navigate into the future)
 
@@ -199,9 +210,9 @@ All tables include Row Level Security (RLS) policies scoped to `auth.uid()` from
 | Column | Type | Notes |
 |--------|------|-------|
 | id | uuid (FK) | References auth.users.id, cascade delete |
-| timezone | text | Default: 'UTC'. Used for push scheduling |
+| timezone | text | Default: 'UTC'; auto-detected from browser on first load |
 | morning_notification_time | time | Default: 08:00 |
-| evening_notification_time | time | Default: 20:00 |
+| evening_notification_time | time | Default: 21:00 |
 | push_subscription | jsonb | Web Push subscription object |
 | created_at | timestamptz | Auto-set |
 
@@ -274,6 +285,7 @@ All tables include Row Level Security (RLS) policies scoped to `auth.uid()` from
 - Built sign up, log in, log out pages
 - Auth middleware refreshes sessions on all requests
 - Auto-create profile trigger on user signup
+- Automatic timezone detection from browser (syncs to profile on each app load)
 
 ### Phase 2 — To-Do List Core
 
@@ -391,9 +403,9 @@ The app uses OpenRouter API with model `nvidia/nemotron-3-nano-30b-a3b:free`. Th
 
 ### Resolved Decisions
 
-- **Push notification timezone handling:** Resolved — each user has a configurable timezone and notification times in `profiles`. The cron job runs frequently and checks if the current local time is within ±7 minutes of the user's configured times.
+- **Push notification timezone handling:** Resolved — timezone is auto-detected from the user's browser via `Intl.DateTimeFormat().resolvedOptions().timeZone` and synced to the profile on each app load. The cron job runs frequently and checks if the current local time is within ±7 minutes of the user's configured times.
 - **iOS Safari push limitations:** Resolved — iOS users who haven't installed the PWA see "Add to Home Screen" instructions in the notification banner. Once installed, the standard Enable button appears. The app sets `apple-mobile-web-app-capable` meta tag and includes iOS-specific PWA metadata.
 
 ---
 
-*Efficient PRD v1.4 · Updated March 2026 · MVP shipped*
+*Efficient PRD v1.5 · Updated March 2026 · MVP shipped*
