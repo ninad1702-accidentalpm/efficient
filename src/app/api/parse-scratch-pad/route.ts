@@ -98,8 +98,27 @@ ${textToProcess}
       return NextResponse.json({ suggestions: [] });
     }
 
+    // Filter out tasks that already exist for this user (from scratch pad)
+    const { data: existingTasks } = await supabase
+      .from("tasks")
+      .select("title")
+      .eq("user_id", user.id)
+      .eq("source", "scratch_pad");
+
+    const existingTitles = new Set(
+      (existingTasks ?? []).map((t: { title: string }) => t.title.toLowerCase().trim())
+    );
+
+    const newSuggestions = suggestions.filter(
+      (s: { title: string }) => !existingTitles.has(s.title.toLowerCase().trim())
+    );
+
+    if (newSuggestions.length === 0) {
+      return NextResponse.json({ suggestions: [] });
+    }
+
     // Save suggestions to DB
-    const rows = suggestions.map(
+    const rows = newSuggestions.map(
       (s: { title: string; due_date: string | null }) => ({
         user_id: user.id,
         suggested_title: s.title,
@@ -110,16 +129,12 @@ ${textToProcess}
       })
     );
 
-    if (rows.length > 0) {
-      const { data: saved } = await supabase
-        .from("ai_suggestions")
-        .insert(rows)
-        .select();
+    const { data: saved } = await supabase
+      .from("ai_suggestions")
+      .insert(rows)
+      .select();
 
-      return NextResponse.json({ suggestions: saved ?? [] });
-    }
-
-    return NextResponse.json({ suggestions: [] });
+    return NextResponse.json({ suggestions: saved ?? [] });
   } catch (error) {
     console.error("AI parsing error:", error);
     return NextResponse.json(
