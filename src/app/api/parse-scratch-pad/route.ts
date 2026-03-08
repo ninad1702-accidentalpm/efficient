@@ -98,26 +98,31 @@ ${textToProcess}
       return NextResponse.json({ suggestions: [] });
     }
 
-    // Filter out tasks that already exist or have pending/accepted suggestions
+    // Filter out exact duplicates (same title + same due date)
     const [{ data: existingTasks }, { data: existingSuggestions }] = await Promise.all([
       supabase
         .from("tasks")
-        .select("title")
+        .select("title, due_date")
         .eq("user_id", user.id),
       supabase
         .from("ai_suggestions")
-        .select("suggested_title")
+        .select("suggested_title, suggested_due_date")
         .eq("user_id", user.id)
         .in("user_action", ["accepted"]),
     ]);
 
-    const existingTitles = new Set([
-      ...(existingTasks ?? []).map((t: { title: string }) => t.title.toLowerCase().trim()),
-      ...(existingSuggestions ?? []).map((s: { suggested_title: string }) => s.suggested_title.toLowerCase().trim()),
+    const existingKeys = new Set([
+      ...(existingTasks ?? []).map((t: { title: string; due_date: string | null }) =>
+        `${t.title.toLowerCase().trim()}|${t.due_date ?? ""}`
+      ),
+      ...(existingSuggestions ?? []).map((s: { suggested_title: string; suggested_due_date: string | null }) =>
+        `${s.suggested_title.toLowerCase().trim()}|${s.suggested_due_date ?? ""}`
+      ),
     ]);
 
     const newSuggestions = suggestions.filter(
-      (s: { title: string }) => !existingTitles.has(s.title.toLowerCase().trim())
+      (s: { title: string; due_date: string | null }) =>
+        !existingKeys.has(`${s.title.toLowerCase().trim()}|${s.due_date ?? ""}`)
     );
 
     if (newSuggestions.length === 0) {
