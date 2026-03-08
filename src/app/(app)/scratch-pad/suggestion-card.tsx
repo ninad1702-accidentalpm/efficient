@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "../components/date-picker";
 import { confirmSuggestion, dismissSuggestion } from "@/lib/actions/scratch-pad";
 import type { AiSuggestion } from "@/lib/types";
 
@@ -20,13 +21,18 @@ export function SuggestionCard({
   const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(suggestion.suggested_title);
+  const [dueDate, setDueDate] = useState<Date | undefined>(
+    suggestion.suggested_due_date
+      ? parseISO(suggestion.suggested_due_date)
+      : undefined
+  );
 
   function handleConfirm() {
     startTransition(async () => {
       await confirmSuggestion(
         suggestion.id,
         title,
-        suggestion.suggested_due_date
+        dueDate ? format(dueDate, "yyyy-MM-dd") : null
       );
       onResolved(suggestion.id);
     });
@@ -67,12 +73,24 @@ export function SuggestionCard({
               {title}
             </p>
           )}
-          {suggestion.suggested_due_date && (
-            <Badge variant="outline" className="mt-1">
-              <Calendar className="size-3" />
-              {format(parseISO(suggestion.suggested_due_date), "MMM d, yyyy")}
-            </Badge>
-          )}
+          <div className="mt-1 flex items-center gap-1.5">
+            <DatePicker
+              date={dueDate}
+              onSelect={setDueDate}
+              placeholder="Add due date"
+              className="h-6 text-xs"
+            />
+            {dueDate && (
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => setDueDate(undefined)}
+                title="Remove due date"
+              >
+                <X className="size-3 text-muted-foreground" />
+              </Button>
+            )}
+          </div>
         </div>
         <div className="flex shrink-0 gap-1">
           <Button
