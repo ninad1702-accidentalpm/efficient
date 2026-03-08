@@ -15,12 +15,27 @@ function isInStandaloneMode() {
   );
 }
 
+const DISMISS_KEY = "push-banner-dismissed-at";
+const DISMISS_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function wasDismissedRecently() {
+  try {
+    const ts = localStorage.getItem(DISMISS_KEY);
+    if (!ts) return false;
+    return Date.now() - Number(ts) < DISMISS_DURATION_MS;
+  } catch {
+    return false;
+  }
+}
+
 export function PushNotificationManager() {
   const [showBanner, setShowBanner] = useState(false);
   const [subscribing, setSubscribing] = useState(false);
   const [iosNotInstalled, setIosNotInstalled] = useState(false);
 
   useEffect(() => {
+    if (wasDismissedRecently()) return;
+
     // iOS but not installed as PWA — show "Add to Home Screen" message
     if (isIos() && !isInStandaloneMode()) {
       setIosNotInstalled(true);
@@ -40,6 +55,13 @@ export function PushNotificationManager() {
       })
       .catch((err) => console.error("SW registration failed:", err));
   }, []);
+
+  function handleDismiss() {
+    setShowBanner(false);
+    try {
+      localStorage.setItem(DISMISS_KEY, String(Date.now()));
+    } catch {}
+  }
 
   async function handleEnable() {
     setSubscribing(true);
@@ -78,7 +100,7 @@ export function PushNotificationManager() {
           <span className="font-medium">&quot;Add to Home Screen&quot;</span>
         </p>
         <button
-          onClick={() => setShowBanner(false)}
+          onClick={handleDismiss}
           className="mt-0.5 text-muted-foreground hover:text-foreground"
         >
           <XIcon className="size-4" />
@@ -97,7 +119,7 @@ export function PushNotificationManager() {
         {subscribing ? "Enabling..." : "Enable"}
       </Button>
       <button
-        onClick={() => setShowBanner(false)}
+        onClick={handleDismiss}
         className="text-muted-foreground hover:text-foreground"
       >
         <XIcon className="size-4" />
