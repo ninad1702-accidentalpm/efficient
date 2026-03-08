@@ -98,16 +98,23 @@ ${textToProcess}
       return NextResponse.json({ suggestions: [] });
     }
 
-    // Filter out tasks that already exist for this user (from scratch pad)
-    const { data: existingTasks } = await supabase
-      .from("tasks")
-      .select("title")
-      .eq("user_id", user.id)
-      .eq("source", "scratch_pad");
+    // Filter out tasks that already exist or have pending/accepted suggestions
+    const [{ data: existingTasks }, { data: existingSuggestions }] = await Promise.all([
+      supabase
+        .from("tasks")
+        .select("title")
+        .eq("user_id", user.id),
+      supabase
+        .from("ai_suggestions")
+        .select("suggested_title")
+        .eq("user_id", user.id)
+        .in("user_action", ["accepted"]),
+    ]);
 
-    const existingTitles = new Set(
-      (existingTasks ?? []).map((t: { title: string }) => t.title.toLowerCase().trim())
-    );
+    const existingTitles = new Set([
+      ...(existingTasks ?? []).map((t: { title: string }) => t.title.toLowerCase().trim()),
+      ...(existingSuggestions ?? []).map((s: { suggested_title: string }) => s.suggested_title.toLowerCase().trim()),
+    ]);
 
     const newSuggestions = suggestions.filter(
       (s: { title: string }) => !existingTitles.has(s.title.toLowerCase().trim())
