@@ -12,7 +12,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { DialogDescription } from "@/components/ui/dialog";
+import { format } from "date-fns";
 import { toggleComplete, addTask, logCheckin } from "@/lib/actions/tasks";
+import { DatePicker } from "./date-picker";
 import type { Task } from "@/lib/types";
 import { PlusIcon } from "lucide-react";
 
@@ -25,6 +27,7 @@ interface CheckInModalProps {
 export function CheckInModal({ type, tasks, onClose }: CheckInModalProps) {
   const [localTasks, setLocalTasks] = useState(tasks);
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDueDate, setNewTaskDueDate] = useState<Date | undefined>();
   const [isPending, startTransition] = useTransition();
 
   const pendingCount = localTasks.filter((t) => t.status !== "completed").length;
@@ -60,9 +63,11 @@ export function CheckInModal({ type, tasks, onClose }: CheckInModalProps) {
   function handleAddTask() {
     const trimmed = newTaskTitle.trim();
     if (!trimmed) return;
+    const dueDate = newTaskDueDate ? format(newTaskDueDate, "yyyy-MM-dd") : null;
     setNewTaskTitle("");
+    setNewTaskDueDate(undefined);
     startTransition(async () => {
-      const task = await addTask(trimmed, null);
+      const task = await addTask(trimmed, dueDate);
       if (task) {
         setLocalTasks((prev) => [task, ...prev]);
       }
@@ -127,6 +132,13 @@ export function CheckInModal({ type, tasks, onClose }: CheckInModalProps) {
                   handleAddTask();
                 }
               }}
+              className="flex-1"
+            />
+            <DatePicker
+              date={newTaskDueDate}
+              onSelect={setNewTaskDueDate}
+              placeholder="Due date"
+              className="h-9 text-xs"
             />
             <Button
               size="icon"
