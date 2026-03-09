@@ -6,7 +6,7 @@
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   timezone text not null default 'UTC',
-  morning_notification_time time not null default '08:00',
+  morning_notification_time time not null default '10:00',
   evening_notification_time time not null default '21:00',
   push_subscription jsonb,
   created_at timestamptz not null default now()
