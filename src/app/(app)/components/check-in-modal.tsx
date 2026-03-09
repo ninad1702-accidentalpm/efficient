@@ -27,7 +27,9 @@ interface CheckInModalProps {
 export function CheckInModal({ type, tasks, onClose }: CheckInModalProps) {
   const [localTasks, setLocalTasks] = useState(tasks);
   const [newTaskTitle, setNewTaskTitle] = useState("");
-  const [newTaskDueDate, setNewTaskDueDate] = useState<Date | undefined>();
+  const [newTaskDueDate, setNewTaskDueDate] = useState<Date | undefined>(
+    new Date()
+  );
   const [isPending, startTransition] = useTransition();
 
   const pendingCount = localTasks.filter((t) => t.status !== "completed").length;
@@ -65,7 +67,7 @@ export function CheckInModal({ type, tasks, onClose }: CheckInModalProps) {
     if (!trimmed) return;
     const dueDate = newTaskDueDate ? format(newTaskDueDate, "yyyy-MM-dd") : null;
     setNewTaskTitle("");
-    setNewTaskDueDate(undefined);
+    setNewTaskDueDate(new Date());
     startTransition(async () => {
       const task = await addTask(trimmed, dueDate);
       if (task) {
