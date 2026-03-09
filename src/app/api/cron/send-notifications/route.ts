@@ -106,13 +106,17 @@ export async function GET(request: Request) {
 
     if ((alreadySent ?? 0) > 0) continue;
 
-    // Count pending tasks (exclude archived)
+    // Count today's tasks (due today or overdue) — exclude archived
+    const localDateStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timezone,
+    }).format(now); // yyyy-MM-dd
     const { count } = await supabase
       .from("tasks")
       .select("*", { count: "exact", head: true })
       .eq("user_id", profile.id)
-      .in("status", ["pending", "someday"])
-      .is("archived_at", null);
+      .eq("status", "pending")
+      .is("archived_at", null)
+      .lte("due_date", localDateStr);
 
     const taskCount = count ?? 0;
 
@@ -122,16 +126,16 @@ export async function GET(request: Request) {
             title: "Good morning!",
             body:
               taskCount > 0
-                ? `You have ${taskCount} task${taskCount === 1 ? "" : "s"} today. Ready to plan your day?`
-                : "No tasks yet — start your day by adding some!",
+                ? `You have ${taskCount} task${taskCount === 1 ? "" : "s"} for today. Ready to plan your day?`
+                : "No tasks for today — add some if you'd like!",
             type: "morning",
           }
         : {
             title: "Evening check-in",
             body:
               taskCount > 0
-                ? `You have ${taskCount} task${taskCount === 1 ? "" : "s"} remaining. How did it go?`
-                : "All caught up! Great work today.",
+                ? `You still have ${taskCount} task${taskCount === 1 ? "" : "s"} for today. How did it go?`
+                : "All done for the day! Great work. Want to add tasks for tomorrow?",
             type: "evening",
           };
 
