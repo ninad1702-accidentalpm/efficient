@@ -129,7 +129,7 @@ export async function GET(request: Request) {
             type: "morning",
           }
         : {
-            title: "End of day check-in",
+            title: "Evening check-in",
             body:
               taskCount > 0
                 ? `You have ${taskCount} task${taskCount === 1 ? "" : "s"} remaining. How did it go?`
