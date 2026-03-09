@@ -94,6 +94,21 @@ export async function GET(request: Request) {
 
     if (!notificationType) continue;
 
+    // Dedup: skip if already sent this type today (in the user's local date)
+    const localDateStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timezone,
+    }).format(now); // yyyy-MM-dd
+    const { count: alreadySent } = await supabase
+      .from("activity_log")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", profile.id)
+      .eq("action", "checkin_sent")
+      .gte("created_at", `${localDateStr}T00:00:00`)
+      .lt("created_at", `${localDateStr}T23:59:59`)
+      .contains("metadata", { type: notificationType });
+
+    if ((alreadySent ?? 0) > 0) continue;
+
     // Count pending tasks
     const { count } = await supabase
       .from("tasks")
