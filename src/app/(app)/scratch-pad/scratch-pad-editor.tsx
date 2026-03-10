@@ -208,7 +208,7 @@ export function ScratchPadEditor({
           id="scratch-pad"
           value={content}
           onChange={handleChange}
-          placeholder="Dump your thoughts here... meetings, ideas, things to do. Use 'Suggest tasks' to review before adding, or 'Add tasks' to send them straight to your to-do list."
+          placeholder="Capture now, organise later. Jot anything down and convert it to tasks when you're ready."
           className="min-h-[300px] resize-y"
         />
         <div className="flex items-center gap-2">
