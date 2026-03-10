@@ -44,7 +44,8 @@ export async function addTask(title: string, dueDate: string | null) {
 
   if (error) throw new Error(error.message);
 
-  await logActivity(user.id, "task_created", data.id, title, {
+  // Fire-and-forget — don't block the user waiting for the log insert
+  logActivity(user.id, "task_created", data.id, title, {
     status,
     due_date: dueDate,
   });
@@ -91,7 +92,7 @@ export async function toggleComplete(taskId: string) {
 
   if (error) throw new Error(error.message);
 
-  await logActivity(
+  logActivity(
     user.id,
     isCompleting ? "task_completed" : "task_uncompleted",
     taskId,
@@ -124,7 +125,7 @@ export async function deleteTask(taskId: string) {
   if (error) throw new Error(error.message);
 
   if (task) {
-    await logActivity(user.id, "task_deleted", taskId, task.title);
+    logActivity(user.id, "task_deleted", taskId, task.title);
   }
 
   revalidatePath("/");
@@ -169,7 +170,7 @@ export async function updateTask(
 
   if (error) throw new Error(error.message);
 
-  await logActivity(user.id, "task_updated", taskId, title, {
+  logActivity(user.id, "task_updated", taskId, title, {
     old_title: existing.title,
     due_date: dueDate,
   });
@@ -263,7 +264,7 @@ export async function snoozeTask(taskId: string, snoozeUntil: string) {
 
   if (error) throw new Error(error.message);
 
-  await logActivity(user.id, "task_snoozed", taskId, task.title, {
+  logActivity(user.id, "task_snoozed", taskId, task.title, {
     snooze_until: snoozeUntil,
   });
 

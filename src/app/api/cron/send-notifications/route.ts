@@ -94,22 +94,15 @@ export async function GET(request: Request) {
 
     if (!notificationType) continue;
 
-    // Dedup: skip if already sent this type in the last 12 hours
-    const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000);
-    const { count: alreadySent } = await supabase
-      .from("activity_log")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", profile.id)
-      .eq("action", "checkin_sent")
-      .gte("created_at", twelveHoursAgo.toISOString())
-      .contains("metadata", { type: notificationType });
-
-    if ((alreadySent ?? 0) > 0) continue;
-
-    // Count today's tasks (due today or overdue) — exclude archived
+    // Atomic dedup: try to INSERT the log entry first.
+    // A unique partial index (user_id, metadata->>'type', date(created_at))
+    // ensures only the first concurrent request succeeds; the rest get a
+    // unique-violation error and are skipped.
     const localDateStr = new Intl.DateTimeFormat("en-CA", {
       timeZone: timezone,
     }).format(now); // yyyy-MM-dd
+
+    // Count today's tasks (due today or overdue) — exclude archived
     const { count } = await supabase
       .from("tasks")
       .select("*", { count: "exact", head: true })
@@ -119,6 +112,21 @@ export async function GET(request: Request) {
       .lte("due_date", localDateStr);
 
     const taskCount = count ?? 0;
+
+    const { data: logEntry, error: logError } = await supabase
+      .from("activity_log")
+      .insert({
+        user_id: profile.id,
+        actor: "app",
+        action: "checkin_sent",
+        metadata: { type: notificationType, task_count: taskCount },
+      })
+      .select("id")
+      .single();
+
+    // Unique violation (code 23505) means another cron call already handled
+    // this notification — skip silently
+    if (logError) continue;
 
     const payload: PushPayload =
       notificationType === "morning"
@@ -138,18 +146,6 @@ export async function GET(request: Request) {
                 : "All done for the day! Great work. Want to add tasks for tomorrow?",
             type: "evening",
           };
-
-    // Write dedup log BEFORE sending to prevent race conditions
-    const { data: logEntry } = await supabase
-      .from("activity_log")
-      .insert({
-        user_id: profile.id,
-        actor: "app",
-        action: "checkin_sent",
-        metadata: { type: notificationType, task_count: taskCount },
-      })
-      .select("id")
-      .single();
 
     try {
       await webpush.sendNotification(

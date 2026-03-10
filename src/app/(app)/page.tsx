@@ -15,8 +15,9 @@ export default async function DashboardPage() {
 
   if (!user) return null;
 
-  // Run snooze reactivation and task fetch in parallel
-  const [, , { data: tasks }] = await Promise.all([
+  // Run all queries in parallel — snooze reactivation, someday fix,
+  // task fetch, and profile config all fire at once
+  const [, , { data: tasks }, { data: profile }] = await Promise.all([
     // Reactivate expired snoozed tasks
     supabase
       .from("tasks")
@@ -42,25 +43,26 @@ export default async function DashboardPage() {
       .neq("status", "snoozed")
       .is("archived_at", null)
       .order("created_at", { ascending: false }),
+    // Fetch profile config for auto-archive
+    supabase
+      .from("profiles")
+      .select("auto_archive_days")
+      .eq("id", user.id)
+      .single(),
   ]);
 
-  // Auto-archive: silently archive old completed tasks if configured
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("auto_archive_days")
-    .eq("id", user.id)
-    .single();
-
+  // Auto-archive: silently archive old completed tasks (fire-and-forget)
   if (profile?.auto_archive_days) {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - profile.auto_archive_days);
-    await supabase
+    supabase
       .from("tasks")
       .update({ archived_at: new Date().toISOString() })
       .eq("user_id", user.id)
       .eq("status", "completed")
       .is("archived_at", null)
-      .lte("completed_at", cutoff.toISOString());
+      .lte("completed_at", cutoff.toISOString())
+      .then(() => {});
   }
 
   return (
