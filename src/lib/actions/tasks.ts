@@ -192,6 +192,50 @@ export async function logCheckin(type: "morning" | "evening") {
   });
 }
 
+export async function archiveCompletedTasks(olderThanDays?: number) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  let query = supabase
+    .from("tasks")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("status", "completed")
+    .is("archived_at", null);
+
+  if (olderThanDays !== undefined) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - olderThanDays);
+    query = query.lte("completed_at", cutoff.toISOString());
+  }
+
+  const { data: matchingTasks } = await query;
+  const count = matchingTasks?.length ?? 0;
+
+  if (count > 0) {
+    const ids = matchingTasks!.map((t) => t.id);
+    await supabase
+      .from("tasks")
+      .update({ archived_at: new Date().toISOString() })
+      .in("id", ids);
+
+    await supabase.from("activity_log").insert({
+      user_id: user.id,
+      actor: "user",
+      action: "tasks_archived",
+      task_id: null,
+      task_title_snapshot: null,
+      metadata: { count, olderThanDays: olderThanDays ?? null },
+    });
+  }
+
+  revalidatePath("/");
+  return count;
+}
+
 export async function snoozeTask(taskId: string, snoozeUntil: string) {
   const supabase = await createClient();
   const {

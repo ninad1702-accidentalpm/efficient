@@ -8,6 +8,7 @@ export interface Task {
   due_date: string | null;
   snooze_until: string | null;
   completed_at: string | null;
+  archived_at: string | null;
   source: "manual" | "ai" | "scratch_pad";
   created_at: string;
   updated_at: string;
@@ -50,4 +51,5 @@ export const ACTION_LABELS: Record<string, string> = {
   task_snoozed: "Snoozed",
   checkin_completed: "Completed",
   checkin_sent: "Sent",
+  tasks_archived: "Archived",
 };

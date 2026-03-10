@@ -16,6 +16,7 @@ export async function GET() {
     .select("*")
     .eq("user_id", user.id)
     .in("status", ["pending", "someday"])
+    .is("archived_at", null)
     .order("created_at", { ascending: false });
 
   return NextResponse.json({ tasks: tasks ?? [] });

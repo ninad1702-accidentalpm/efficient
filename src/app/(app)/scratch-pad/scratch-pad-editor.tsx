@@ -1,9 +1,17 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { CheckCircle2, ListPlus, Sparkles } from "lucide-react";
+import { CheckCircle2, ListPlus, Sparkles, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { SuggestionCard } from "./suggestion-card";
 import { saveScratchPad, updateLastProcessed, confirmSuggestion } from "@/lib/actions/scratch-pad";
 import type { AiSuggestion } from "@/lib/types";
@@ -24,6 +32,7 @@ export function ScratchPadEditor({
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
   const isParsingRef = useRef(false);
   const latestContentRef = useRef(content);
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
 
   // Keep latestContentRef in sync so the parse callback sees the latest value
   useEffect(() => {
@@ -113,6 +122,16 @@ export function ScratchPadEditor({
     parseContent(latestContentRef.current, lastProcessed, true);
   }
 
+  async function handleClearConfirm() {
+    setClearDialogOpen(false);
+    setContent("");
+    latestContentRef.current = "";
+    await saveScratchPad("");
+    await updateLastProcessed("");
+    setLastProcessed("");
+    setSuggestions([]);
+  }
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -144,6 +163,8 @@ export function ScratchPadEditor({
     setSuggestions((prev) => prev.filter((s) => s.id !== id));
   }
 
+  const isBusy = status === "parsing" || status === "adding" || status === "saving";
+
   const statusText =
     status === "saving"
       ? "Saving..."
@@ -169,7 +190,7 @@ export function ScratchPadEditor({
         <div className="flex items-center gap-2">
           <Button
             onClick={handleSuggestTasks}
-            disabled={status === "parsing" || status === "adding" || status === "saving" || !content.trim()}
+            disabled={isBusy || !content.trim()}
             size="sm"
             className="gap-1.5"
           >
@@ -178,13 +199,23 @@ export function ScratchPadEditor({
           </Button>
           <Button
             onClick={handleAddTasks}
-            disabled={status === "parsing" || status === "adding" || status === "saving" || !content.trim()}
+            disabled={isBusy || !content.trim()}
             size="sm"
             variant="outline"
             className="gap-1.5"
           >
             <ListPlus className="size-3.5" />
             {status === "adding" ? "Adding tasks..." : "Add tasks"}
+          </Button>
+          <Button
+            onClick={() => setClearDialogOpen(true)}
+            disabled={!content.trim() || isBusy}
+            size="sm"
+            variant="ghost"
+            className="gap-1.5"
+          >
+            <Trash2 className="size-3.5" />
+            Clear
           </Button>
         </div>
         {addedCount > 0 && (
@@ -211,6 +242,25 @@ export function ScratchPadEditor({
           </div>
         </div>
       )}
+
+      <Dialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Clear your scratch pad?</DialogTitle>
+            <DialogDescription>
+              This will remove all text and suggestions. This can&apos;t be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setClearDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleClearConfirm}>
+              Clear
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

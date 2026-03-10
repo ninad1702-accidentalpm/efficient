@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { LogoutButton } from "./logout-button";
-import { NavTabs } from "./components/nav-tabs";
+import { NavWrapper } from "./components/nav-wrapper";
 import { PushNotificationManager } from "./components/push-notification-manager";
 import { TimezoneSync } from "./components/timezone-sync";
+import { OnboardingModal } from "./components/onboarding-modal";
 
 export default async function AppLayout({
   children,
@@ -19,16 +19,27 @@ export default async function AppLayout({
     redirect("/login");
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("onboarding_completed")
+    .eq("id", user.id)
+    .single();
+
+  const onboardingCompleted = profile?.onboarding_completed ?? false;
+
   return (
-    <div className="mx-auto min-h-screen w-full max-w-2xl px-4">
-      <header className="flex items-center justify-between border-b border-white/[0.06] py-5">
-        <h1 className="text-xl font-semibold tracking-tight">Efficient</h1>
-        <LogoutButton />
-      </header>
+    <div className="min-h-screen">
       <TimezoneSync />
       <PushNotificationManager />
-      <NavTabs />
-      <main className="py-6">{children}</main>
+      <NavWrapper userEmail={user.email} />
+      <OnboardingModal show={!onboardingCompleted} />
+
+      {/* Main content: offset on desktop for sidebar, padded bottom on mobile for bottom nav */}
+      <div className="lg:pl-56">
+        <main className="mx-auto w-full max-w-2xl px-4 pb-20 pt-6 lg:pb-6">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
