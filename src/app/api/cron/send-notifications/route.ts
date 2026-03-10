@@ -125,8 +125,14 @@ export async function GET(request: Request) {
       .single();
 
     // Unique violation (code 23505) means another cron call already handled
-    // this notification — skip silently
-    if (logError) continue;
+    // this notification — skip silently. Any other error is unexpected but
+    // we still skip to avoid sending without a dedup record.
+    if (logError) {
+      if (logError.code !== "23505") {
+        console.error(`Dedup insert failed for user ${profile.id}:`, logError);
+      }
+      continue;
+    }
 
     const payload: PushPayload =
       notificationType === "morning"
