@@ -33,6 +33,7 @@ export function ScratchPadEditor({
   const isParsingRef = useRef(false);
   const latestContentRef = useRef(content);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [leftoverSource, setLeftoverSource] = useState<"suggest" | "add" | null>(null);
 
   // Keep latestContentRef in sync so the parse callback sees the latest value
   useEffect(() => {
@@ -73,10 +74,22 @@ export function ScratchPadEditor({
           }
           setAddedCount(newSuggestions.length);
           setTimeout(() => setAddedCount(0), 3000);
-          // Clear the scratch pad after adding tasks
-          setContent("");
-          latestContentRef.current = "";
-          await saveScratchPad("");
+          // Remove source_text of each added task, clean up artifacts
+          let updated = latestContentRef.current;
+          for (const s of newSuggestions) {
+            if (s.source_text) {
+              updated = updated.replace(s.source_text, "");
+            }
+          }
+          updated = updated
+            .replace(/\n{3,}/g, "\n\n")
+            .replace(/^[\s\-•*\d.)]+$/gm, "")
+            .replace(/\n{3,}/g, "\n\n")
+            .trim();
+          setContent(updated);
+          latestContentRef.current = updated;
+          setLeftoverSource(updated.length > 0 ? "add" : null);
+          await saveScratchPad(updated);
         } else {
           setSuggestions((prev) => [...newSuggestions, ...prev]);
         }
@@ -115,10 +128,12 @@ export function ScratchPadEditor({
   );
 
   function handleSuggestTasks() {
+    setLeftoverSource(null);
     parseContent(latestContentRef.current, lastProcessed);
   }
 
   function handleAddTasks() {
+    setLeftoverSource(null);
     parseContent(latestContentRef.current, lastProcessed, true);
   }
 
@@ -126,6 +141,7 @@ export function ScratchPadEditor({
     setClearDialogOpen(false);
     setContent("");
     latestContentRef.current = "";
+    setLeftoverSource(null);
     await saveScratchPad("");
     await updateLastProcessed("");
     setLastProcessed("");
@@ -144,6 +160,7 @@ export function ScratchPadEditor({
   function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     const value = e.target.value;
     setContent(value);
+    setLeftoverSource(null);
     debouncedSave(value);
   }
 
@@ -153,9 +170,16 @@ export function ScratchPadEditor({
       const suggestion = suggestions.find((s) => s.id === id);
       if (suggestion?.source_text) {
         setContent((prev) => {
-          const updated = prev.replace(suggestion.source_text, "").replace(/\n{3,}/g, "\n\n").trim();
+          const updated = prev
+            .replace(suggestion.source_text, "")
+            .replace(/\n{3,}/g, "\n\n")
+            // Remove lines that are only bullets, numbers, or punctuation remnants
+            .replace(/^[\s\-•*\d.)]+$/gm, "")
+            .replace(/\n{3,}/g, "\n\n")
+            .trim();
           latestContentRef.current = updated;
           saveScratchPad(updated);
+          setLeftoverSource(updated.length > 0 ? "suggest" : null);
           return updated;
         });
       }
@@ -222,6 +246,12 @@ export function ScratchPadEditor({
           <div className="flex items-center gap-2 rounded-lg bg-green-500/10 px-4 py-3 text-sm font-medium text-green-400">
             <CheckCircle2 className="size-4 shrink-0" />
             {addedCount} task{addedCount === 1 ? "" : "s"} added to your to-do list
+          </div>
+        )}
+        {leftoverSource && content.trim().length > 0 && (
+          <div className="rounded-lg border border-border px-4 py-3 text-xs text-muted-foreground">
+            Some content wasn&apos;t turned into tasks — it may not contain clear action items.
+            You can edit it, clear it, or try clicking on &quot;{leftoverSource === "add" ? "Add tasks" : "Suggest tasks"}&quot; again.
           </div>
         )}
       </div>

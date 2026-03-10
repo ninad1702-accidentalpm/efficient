@@ -98,27 +98,19 @@ ${textToProcess}
       return NextResponse.json({ suggestions: [] });
     }
 
-    // Filter out exact duplicates (same title + same due date)
-    const [{ data: existingTasks }, { data: existingSuggestions }] = await Promise.all([
-      supabase
-        .from("tasks")
-        .select("title, due_date")
-        .eq("user_id", user.id),
-      supabase
-        .from("ai_suggestions")
-        .select("suggested_title, suggested_due_date")
-        .eq("user_id", user.id)
-        .in("user_action", ["accepted"]),
-    ]);
+    // Filter out exact duplicates (same title + same due date) against active tasks only
+    const { data: existingTasks } = await supabase
+      .from("tasks")
+      .select("title, due_date")
+      .eq("user_id", user.id)
+      .neq("status", "completed")
+      .is("archived_at", null);
 
-    const existingKeys = new Set([
-      ...(existingTasks ?? []).map((t: { title: string; due_date: string | null }) =>
+    const existingKeys = new Set(
+      (existingTasks ?? []).map((t: { title: string; due_date: string | null }) =>
         `${t.title.toLowerCase().trim()}|${t.due_date ?? ""}`
-      ),
-      ...(existingSuggestions ?? []).map((s: { suggested_title: string; suggested_due_date: string | null }) =>
-        `${s.suggested_title.toLowerCase().trim()}|${s.suggested_due_date ?? ""}`
-      ),
-    ]);
+      )
+    );
 
     const newSuggestions = suggestions.filter(
       (s: { title: string; due_date: string | null }) =>
