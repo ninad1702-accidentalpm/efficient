@@ -13,7 +13,7 @@ import {
 
 const navItems = [
   { label: "To-do", href: "/", icon: CheckSquare },
-  { label: "Scratch Pad", href: "/scratch-pad", icon: StickyNote },
+  { label: "Scratch pad", href: "/scratch-pad", icon: StickyNote },
   { label: "Summary", href: "/summary", icon: BarChart3 },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
