@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import {
   CheckSquare,
   StickyNote,
-  BarChart3,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -14,7 +13,7 @@ import {
 const navItems = [
   { label: "To-do", href: "/", icon: CheckSquare },
   { label: "Scratch pad", href: "/scratch-pad", icon: StickyNote },
-  { label: "Summary", href: "/summary", icon: BarChart3 },
+  // { label: "Summary", href: "/summary", icon: BarChart3 },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 
