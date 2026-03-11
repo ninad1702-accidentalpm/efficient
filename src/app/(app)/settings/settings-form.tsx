@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import {
   Card,
   CardHeader,
@@ -11,19 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
-import {
   updateNotificationTimes,
   updateAutoArchiveDays,
 } from "@/lib/actions/profile";
-import { archiveCompletedTasks } from "@/lib/actions/tasks";
 
 interface SettingsFormProps {
   morningTime: string;
@@ -79,13 +69,6 @@ function TimeSelect({
   );
 }
 
-const ARCHIVE_OPTIONS = [
-  { label: "Disabled", value: null },
-  { label: "After 7 days", value: 7 },
-  { label: "After 14 days", value: 14 },
-  { label: "After 30 days", value: 30 },
-] as const;
-
 export function SettingsForm({
   morningTime,
   eveningTime,
@@ -94,12 +77,18 @@ export function SettingsForm({
   const [morning, setMorning] = useState(morningTime);
   const [evening, setEvening] = useState(eveningTime);
   const [archiveDays, setArchiveDays] = useState<number | null>(
-    autoArchiveDays
+    autoArchiveDays ?? 1
   );
   const [notifSaved, setNotifSaved] = useState(false);
-  const [archiveResult, setArchiveResult] = useState<string | null>(null);
-  const [confirmOpen, setConfirmOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (autoArchiveDays === null) {
+      startTransition(async () => {
+        await updateAutoArchiveDays(1);
+      });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleSaveNotifications() {
     startTransition(async () => {
@@ -110,23 +99,18 @@ export function SettingsForm({
   }
 
   function handleArchiveDaysChange(value: string) {
-    const days = value === "" ? null : Number(value);
-    setArchiveDays(days);
+    const parsed = parseInt(value, 10);
+    if (value === "" || isNaN(parsed)) {
+      setArchiveDays(null);
+      startTransition(async () => {
+        await updateAutoArchiveDays(null);
+      });
+      return;
+    }
+    const clamped = Math.min(365, Math.max(1, parsed));
+    setArchiveDays(clamped);
     startTransition(async () => {
-      await updateAutoArchiveDays(days);
-    });
-  }
-
-  function handleManualArchive() {
-    setConfirmOpen(false);
-    startTransition(async () => {
-      const count = await archiveCompletedTasks();
-      setArchiveResult(
-        count > 0
-          ? `Cleared ${count} completed task${count === 1 ? "" : "s"}.`
-          : "No completed tasks to clear."
-      );
-      setTimeout(() => setArchiveResult(null), 5000);
+      await updateAutoArchiveDays(clamped);
     });
   }
 
@@ -176,71 +160,29 @@ export function SettingsForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Clear completed tasks</CardTitle>
+          <CardTitle>Auto-clear completed tasks</CardTitle>
           <CardDescription>
-            Automatically clear completed tasks after a set number of days, or
-            clear them manually.
+            Automatically clear completed tasks after a set number of days.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="auto-archive">Auto-clear completed tasks</Label>
-              <select
-                id="auto-archive"
-                value={archiveDays === null ? "" : String(archiveDays)}
-                onChange={(e) => handleArchiveDaysChange(e.target.value)}
-                className={`${selectClassName} w-36`}
-              >
-                {ARCHIVE_OPTIONS.map((opt) => (
-                  <option
-                    key={opt.label}
-                    value={opt.value === null ? "" : String(opt.value)}
-                  >
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="grid gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setConfirmOpen(true)}
-                disabled={isPending}
-              >
-                Clear all completed tasks
-              </Button>
-              {archiveResult && (
-                <p className="text-sm text-muted-foreground">{archiveResult}</p>
-              )}
-            </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
+              Auto-clear after
+            </span>
+            <input
+              id="auto-archive"
+              type="number"
+              min={1}
+              max={365}
+              value={archiveDays ?? ""}
+              onChange={(e) => handleArchiveDaysChange(e.target.value)}
+              className="h-8 w-12 rounded-md border border-input bg-background px-1 text-sm text-center ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring font-sans [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <span className="text-sm text-muted-foreground">days</span>
           </div>
         </CardContent>
       </Card>
-
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Clear completed tasks?</DialogTitle>
-            <DialogDescription>
-              This will permanently remove all completed tasks from your list.
-              Cleared tasks cannot be viewed or restored.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <DialogClose render={<Button variant="outline" />}>
-              Cancel
-            </DialogClose>
-            <Button
-              variant="destructive"
-              onClick={handleManualArchive}
-              disabled={isPending}
-            >
-              Clear all
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
