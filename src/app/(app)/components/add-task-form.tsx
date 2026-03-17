@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { format } from "date-fns";
+import { useEffect, useState, useTransition } from "react";
+import { format, parseISO, startOfDay } from "date-fns";
 import { CalendarIcon, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,18 @@ export function AddTaskForm() {
   const [dueDate, setDueDate] = useState<Date | undefined>();
   const [isPending, startTransition] = useTransition();
 
+  useEffect(() => {
+    const stored = localStorage.getItem("last-task-due-date");
+    if (stored) {
+      const parsed = parseISO(stored);
+      if (parsed >= startOfDay(new Date())) {
+        setDueDate(parsed);
+        return;
+      }
+    }
+    setDueDate(new Date());
+  }, []);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = title.trim();
@@ -26,7 +38,9 @@ export function AddTaskForm() {
         dueDate ? format(dueDate, "yyyy-MM-dd") : null
       );
       setTitle("");
-      setDueDate(undefined);
+      if (dueDate) {
+        localStorage.setItem("last-task-due-date", format(dueDate, "yyyy-MM-dd"));
+      }
     });
   }
 
@@ -59,6 +73,15 @@ export function AddTaskForm() {
             selected={dueDate}
             onSelect={setDueDate}
           />
+          {dueDate && (
+            <button
+              type="button"
+              className="w-full border-t px-3 py-2 text-sm text-foreground"
+              onClick={() => setDueDate(undefined)}
+            >
+              Someday
+            </button>
+          )}
         </PopoverContent>
       </Popover>
       <Button type="submit" size="sm" disabled={isPending || !title.trim()}>
