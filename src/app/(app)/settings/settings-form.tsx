@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { usePostHog } from "posthog-js/react";
 import {
   Card,
   CardHeader,
@@ -14,7 +16,10 @@ import {
   updateNotificationTimes,
   updateAutoArchiveDays,
 } from "@/lib/actions/profile";
+import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "@/components/theme-provider";
+import { FeedbackDialog } from "../components/feedback-dialog";
+import { MessageSquareMore, LogOut } from "lucide-react";
 
 interface SettingsFormProps {
   morningTime: string;
@@ -75,6 +80,8 @@ export function SettingsForm({
   eveningTime,
   autoArchiveDays,
 }: SettingsFormProps) {
+  const router = useRouter();
+  const posthog = usePostHog();
   const [morning, setMorning] = useState(morningTime);
   const [evening, setEvening] = useState(eveningTime);
   const [archiveDays, setArchiveDays] = useState<number | null>(
@@ -83,6 +90,14 @@ export function SettingsForm({
   const [notifSaved, setNotifSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { theme, toggleTheme } = useTheme();
+
+  async function handleLogout() {
+    posthog?.reset();
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
 
   useEffect(() => {
     if (autoArchiveDays === null) {
@@ -222,6 +237,32 @@ export function SettingsForm({
           </div>
         </CardContent>
       </Card>
+
+      <Card className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[14px] p-6 ring-0">
+        <CardHeader>
+          <CardTitle className="font-display text-[1.1rem] text-[var(--text-primary)]">Feedback</CardTitle>
+          <CardDescription className="text-[0.8rem] text-[var(--text-muted)]">
+            Found a bug or have a suggestion? We&apos;d love to hear from you.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <FeedbackDialog>
+            <Button variant="outline">
+              <MessageSquareMore className="size-4" />
+              Send feedback
+            </Button>
+          </FeedbackDialog>
+        </CardContent>
+      </Card>
+
+      <Button
+        variant="outline"
+        onClick={handleLogout}
+        className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+      >
+        <LogOut className="size-4" />
+        Log out
+      </Button>
     </div>
   );
 }

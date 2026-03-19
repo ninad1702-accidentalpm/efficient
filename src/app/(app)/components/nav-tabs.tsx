@@ -10,8 +10,11 @@ import {
   LogOut,
   Sun,
   Moon,
+  MessageSquareMore,
 } from "lucide-react";
+import { FeedbackDialog } from "./feedback-dialog";
 import { useTheme } from "@/components/theme-provider";
+import { Button } from "@/components/ui/button";
 
 const navItems = [
   { label: "To-do", href: "/", icon: CheckSquare },
@@ -95,6 +98,15 @@ export function NavTabs({ userEmail, onLogout }: NavTabsProps) {
               {userEmail}
             </p>
           )}
+          <FeedbackDialog>
+            <Button
+              variant="outline"
+              className="mb-2 w-full justify-start gap-2 text-[0.8rem]"
+            >
+              <MessageSquareMore className="size-4" />
+              Send feedback
+            </Button>
+          </FeedbackDialog>
           <div className="flex items-center gap-2">
             <button
               onClick={onLogout}

@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AuthBrandingPanel, AuthFeaturesMobile } from "../components/auth-branding-panel";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -38,19 +39,14 @@ export default function SignupPage() {
 
   return (
     <div className="flex min-h-screen">
-      {/* Left branding column — desktop only */}
-      <div className="hidden lg:flex lg:w-[40%] items-center justify-center bg-[var(--bg-surface)]">
-        <div className="text-center">
-          <h1 className="font-display text-[3rem] text-[var(--text-primary)]">Efficient</h1>
-          <p className="mt-2 text-[var(--text-muted)]">Your day, organised.</p>
-        </div>
-      </div>
+      <AuthBrandingPanel />
 
       {/* Right form column */}
       <div className="flex flex-1 items-center justify-center px-4 bg-[var(--bg-base)]">
         <div className="w-full max-w-sm space-y-6">
           <h1 className="text-center font-display text-[2rem] text-[var(--text-primary)] lg:hidden">Efficient</h1>
-          <div>
+          <AuthFeaturesMobile />
+          <div className="text-center lg:text-left">
             <h2 className="text-2xl font-medium text-[var(--text-primary)]">Sign up</h2>
             <p className="mt-1 text-sm text-[var(--text-muted)]">Create an account to get started</p>
           </div>
