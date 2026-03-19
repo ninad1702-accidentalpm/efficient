@@ -53,10 +53,10 @@ function FilterPill({
         e.stopPropagation();
         onClick();
       }}
-      className={`rounded-full px-2 py-0.5 text-[10px] font-medium transition-colors ${
+      className={`rounded-full px-2.5 py-0.5 text-[10px] font-medium transition-colors border ${
         active
-          ? "bg-primary/10 text-primary"
-          : "text-muted-foreground hover:text-foreground"
+          ? "bg-[var(--accent)] text-[var(--accent-fg)] border-transparent"
+          : "bg-[var(--bg-elevated)] border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
       }`}
     >
       {label}
@@ -212,7 +212,7 @@ export function TaskList({ tasks }: TaskListProps) {
         <div className="flex items-center justify-between px-3">
           <button
             onClick={() => setTodayOpen((v) => !v)}
-            className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+            className="flex items-center gap-1.5 text-[0.7rem] font-medium uppercase tracking-[0.08em] text-[var(--text-muted)]"
           >
             <ChevronIcon open={todayOpen} />
             Today ({todayTasks.length})
@@ -258,7 +258,7 @@ export function TaskList({ tasks }: TaskListProps) {
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setUpcomingOpen((v) => !v)}
-              className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+              className="flex items-center gap-1.5 text-[0.7rem] font-medium uppercase tracking-[0.08em] text-[var(--text-muted)]"
             >
               <ChevronIcon open={upcomingOpen} />
               Upcoming ({upcomingTasks.length})
@@ -305,7 +305,7 @@ export function TaskList({ tasks }: TaskListProps) {
         <div className="flex items-center justify-between px-3">
           <button
             onClick={() => setCompletedOpen((v) => !v)}
-            className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+            className="flex items-center gap-1.5 text-[0.7rem] font-medium uppercase tracking-[0.08em] text-[var(--text-muted)]"
           >
             <ChevronIcon open={completedOpen} />
             Completed ({filteredCompletedTasks.length})

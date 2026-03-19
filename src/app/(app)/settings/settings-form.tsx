@@ -14,6 +14,7 @@ import {
   updateNotificationTimes,
   updateAutoArchiveDays,
 } from "@/lib/actions/profile";
+import { useTheme } from "@/components/theme-provider";
 
 interface SettingsFormProps {
   morningTime: string;
@@ -22,7 +23,7 @@ interface SettingsFormProps {
 }
 
 const selectClassName =
-  "h-8 appearance-none rounded-md border border-input bg-background pl-2.5 pr-7 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23888%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_4px_center] bg-no-repeat";
+  "h-8 appearance-none rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] pl-2.5 pr-7 text-sm text-[var(--text-primary)] font-sans focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23888%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_4px_center] bg-no-repeat";
 
 const HOURS = Array.from({ length: 24 }, (_, i) =>
   String(i).padStart(2, "0")
@@ -81,6 +82,7 @@ export function SettingsForm({
   );
   const [notifSaved, setNotifSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     if (autoArchiveDays === null) {
@@ -116,10 +118,46 @@ export function SettingsForm({
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[14px] p-6 ring-0">
         <CardHeader>
-          <CardTitle>Notifications</CardTitle>
-          <CardDescription>
+          <CardTitle className="font-display text-[1.1rem] text-[var(--text-primary)]">Appearance</CardTitle>
+          <CardDescription className="text-[0.8rem] text-[var(--text-muted)]">
+            Customize how Efficient looks.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <Label>Theme</Label>
+            <div className="flex h-8 rounded-lg border border-input bg-muted p-0.5">
+              <button
+                onClick={theme === "dark" ? undefined : toggleTheme}
+                className={`rounded-md px-3 text-sm font-medium transition-all duration-150 ${
+                  theme === "dark"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Dark
+              </button>
+              <button
+                onClick={theme === "light" ? undefined : toggleTheme}
+                className={`rounded-md px-3 text-sm font-medium transition-all duration-150 ${
+                  theme === "light"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Light
+              </button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[14px] p-6 ring-0">
+        <CardHeader>
+          <CardTitle className="font-display text-[1.1rem] text-[var(--text-primary)]">Notifications</CardTitle>
+          <CardDescription className="text-[0.8rem] text-[var(--text-muted)]">
             Set when you receive morning and evening check-in reminders.
           </CardDescription>
         </CardHeader>
@@ -145,6 +183,7 @@ export function SettingsForm({
               <Button
                 onClick={handleSaveNotifications}
                 disabled={isPending}
+                className="bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg font-medium"
               >
                 Save
               </Button>
@@ -158,10 +197,10 @@ export function SettingsForm({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[14px] p-6 ring-0">
         <CardHeader>
-          <CardTitle>Auto-clear completed tasks</CardTitle>
-          <CardDescription>
+          <CardTitle className="font-display text-[1.1rem] text-[var(--text-primary)]">Auto-clear completed tasks</CardTitle>
+          <CardDescription className="text-[0.8rem] text-[var(--text-muted)]">
             Automatically clear completed tasks after a set number of days.
           </CardDescription>
         </CardHeader>
@@ -177,7 +216,7 @@ export function SettingsForm({
               max={365}
               value={archiveDays ?? ""}
               onChange={(e) => handleArchiveDaysChange(e.target.value)}
-              className="h-8 w-12 rounded-md border border-input bg-background px-1 text-sm text-center ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring font-sans [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="h-8 w-12 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] px-1 text-sm text-center text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] font-sans [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
             <span className="text-sm text-muted-foreground">days</span>
           </div>

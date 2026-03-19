@@ -8,7 +8,10 @@ import {
   StickyNote,
   Settings,
   LogOut,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { useTheme } from "@/components/theme-provider";
 
 const navItems = [
   { label: "To-do", href: "/", icon: CheckSquare },
@@ -24,6 +27,7 @@ interface NavTabsProps {
 
 export function NavTabs({ userEmail, onLogout }: NavTabsProps) {
   const pathname = usePathname();
+  const { theme, toggleTheme } = useTheme();
 
   function isActive(href: string) {
     return href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -56,10 +60,10 @@ export function NavTabs({ userEmail, onLogout }: NavTabsProps) {
       </nav>
 
       {/* ── Desktop left sidebar (lg and above) ── */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-56 flex-col border-r border-white/[0.06] bg-background lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-56 flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-surface)] lg:flex">
         {/* App name */}
         <div className="px-5 py-6">
-          <h1 className="text-lg font-semibold tracking-tight">Efficient</h1>
+          <h1 className="font-display text-[1.4rem] text-[var(--text-primary)]">Efficient</h1>
         </div>
 
         {/* Nav items */}
@@ -71,10 +75,10 @@ export function NavTabs({ userEmail, onLogout }: NavTabsProps) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  "flex items-center gap-3 border-l-2 px-3 py-2 text-[0.875rem] font-medium transition-colors",
                   active
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground"
+                    ? "border-[var(--accent)] bg-[var(--bg-elevated)] text-[var(--text-primary)]"
+                    : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 )}
               >
                 <item.icon className="size-4" strokeWidth={active ? 2.5 : 2} />
@@ -84,20 +88,36 @@ export function NavTabs({ userEmail, onLogout }: NavTabsProps) {
           })}
         </nav>
 
-        {/* User email + logout pinned to bottom */}
-        <div className="border-t border-white/[0.06] px-4 py-4">
+        {/* User email + theme toggle + logout pinned to bottom */}
+        <div className="border-t border-[var(--border-subtle)] px-4 py-4">
           {userEmail && (
-            <p className="mb-2 truncate text-xs text-muted-foreground">
+            <p className="mb-2 truncate text-[0.75rem] text-[var(--text-muted)]">
               {userEmail}
             </p>
           )}
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <LogOut className="size-4" />
-            Log out
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onLogout}
+              className="flex items-center gap-2 text-[0.75rem] text-[var(--text-muted)] transition-colors hover:text-destructive"
+            >
+              <LogOut className="size-4" />
+              Log out
+            </button>
+            <button
+              onClick={toggleTheme}
+              className="relative ml-auto size-8 rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+              aria-label="Toggle theme"
+            >
+              <Sun
+                className="absolute inset-0 m-auto size-4 transition-opacity duration-150"
+                style={{ opacity: theme === "dark" ? 1 : 0 }}
+              />
+              <Moon
+                className="absolute inset-0 m-auto size-4 transition-opacity duration-150"
+                style={{ opacity: theme === "light" ? 1 : 0 }}
+              />
+            </button>
+          </div>
         </div>
       </aside>
     </>

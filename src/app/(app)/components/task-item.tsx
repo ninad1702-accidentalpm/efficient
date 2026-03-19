@@ -43,7 +43,7 @@ export function TaskItem({ task }: TaskItemProps) {
 
   function getDateBadge() {
     if (task.status === "someday") {
-      return <Badge className="border border-purple-500/20 bg-purple-500/15 text-purple-400">Someday</Badge>;
+      return <Badge className="border border-[var(--accent)] bg-[rgba(232,197,71,0.08)] text-[var(--accent)] text-[0.72rem] rounded-full">Someday</Badge>;
     }
     if (!task.due_date) return null;
 
@@ -53,30 +53,30 @@ export function TaskItem({ task }: TaskItemProps) {
       : `Due ${format(dueDate, "MMM d")}`;
 
     if (isCompleted) {
-      return <Badge variant="secondary">{label}</Badge>;
+      return <Badge className="border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-muted)] text-[0.72rem] rounded-full">{label}</Badge>;
     }
 
     const overdue = isBefore(startOfDay(dueDate), startOfDay(new Date()));
     const today = isToday(dueDate);
 
     if (overdue) {
-      return <Badge className="border border-red-500/20 bg-red-500/15 text-red-400">{label}</Badge>;
+      return <Badge className="border border-[#E85547] bg-[rgba(232,85,71,0.08)] text-[#E85547] text-[0.72rem] rounded-full">{label}</Badge>;
     }
     if (today) {
       return (
-        <Badge className="border border-amber-500/20 bg-amber-500/15 text-amber-400">
+        <Badge className="border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-[0.72rem] rounded-full">
           Due Today
         </Badge>
       );
     }
-    return <Badge variant="outline">{label}</Badge>;
+    return <Badge className="border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] text-[0.72rem] rounded-full">{label}</Badge>;
   }
 
   return (
     <>
       <div
         className={cn(
-          "group flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-white/[0.03]",
+          "group flex items-center gap-3 rounded-[10px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3.5 py-3 mb-1.5 transition-colors hover:bg-[var(--bg-elevated)] hover:border-[var(--border)]",
           isPending && "opacity-50"
         )}
       >
@@ -87,8 +87,8 @@ export function TaskItem({ task }: TaskItemProps) {
         />
         <span
           className={cn(
-            "flex-1 truncate",
-            isCompleted && "text-muted-foreground line-through"
+            "flex-1 truncate text-[0.9rem] text-[var(--text-primary)]",
+            isCompleted && "opacity-50 line-through"
           )}
         >
           {task.title}

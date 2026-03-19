@@ -209,14 +209,13 @@ export function ScratchPadEditor({
           value={content}
           onChange={handleChange}
           placeholder="Capture now, organise later. Jot anything down and convert it to tasks when you're ready."
-          className="min-h-[300px] resize-y"
+          className="min-h-[280px] resize-y bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl text-[0.9rem] leading-[1.7] p-4 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus-visible:border-[var(--accent)]"
         />
         <div className="flex items-center gap-2">
           <Button
             onClick={handleSuggestTasks}
             disabled={isBusy || !content.trim()}
-            size="sm"
-            className="gap-1.5"
+            className="gap-1.5 bg-[var(--accent)] text-[var(--accent-fg)] text-[0.85rem] font-medium rounded-lg"
           >
             <Sparkles className="size-3.5" />
             {status === "parsing" ? "Looking for tasks..." : "Suggest tasks"}
@@ -224,9 +223,8 @@ export function ScratchPadEditor({
           <Button
             onClick={handleAddTasks}
             disabled={isBusy || !content.trim()}
-            size="sm"
             variant="outline"
-            className="gap-1.5"
+            className="gap-1.5 bg-[var(--bg-elevated)] border-[var(--border)] text-[var(--text-secondary)] rounded-lg hover:border-[var(--accent)]"
           >
             <ListPlus className="size-3.5" />
             {status === "adding" ? "Adding tasks..." : "Add tasks"}
@@ -234,9 +232,8 @@ export function ScratchPadEditor({
           <Button
             onClick={() => setClearDialogOpen(true)}
             disabled={!content.trim() || isBusy}
-            size="sm"
-            variant="ghost"
-            className="gap-1.5"
+            variant="outline"
+            className="gap-1.5 bg-transparent border-[var(--border)] text-[var(--text-muted)] rounded-lg hover:border-[#E85547] hover:text-[#E85547]"
           >
             <Trash2 className="size-3.5" />
             Clear

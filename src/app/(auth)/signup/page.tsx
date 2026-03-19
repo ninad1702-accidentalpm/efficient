@@ -7,14 +7,6 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -45,20 +37,26 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-6">
-        <h1 className="text-center text-2xl font-semibold tracking-tight">Efficient</h1>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>
-            Create an account to get started
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSignup} autoComplete="off">
-          <CardContent className="space-y-4">
+    <div className="flex min-h-screen">
+      {/* Left branding column — desktop only */}
+      <div className="hidden lg:flex lg:w-[40%] items-center justify-center bg-[var(--bg-surface)]">
+        <div className="text-center">
+          <h1 className="font-display text-[3rem] text-[var(--text-primary)]">Efficient</h1>
+          <p className="mt-2 text-[var(--text-muted)]">Your day, organised.</p>
+        </div>
+      </div>
+
+      {/* Right form column */}
+      <div className="flex flex-1 items-center justify-center px-4 bg-[var(--bg-base)]">
+        <div className="w-full max-w-sm space-y-6">
+          <h1 className="text-center font-display text-[2rem] text-[var(--text-primary)] lg:hidden">Efficient</h1>
+          <div>
+            <h2 className="text-2xl font-medium text-[var(--text-primary)]">Sign up</h2>
+            <p className="mt-1 text-sm text-[var(--text-muted)]">Create an account to get started</p>
+          </div>
+          <form onSubmit={handleSignup} autoComplete="off" className="space-y-4">
             {error && (
-              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              <div className="rounded-[10px] bg-destructive/10 p-3 text-sm text-destructive">
                 {error}
               </div>
             )}
@@ -71,6 +69,7 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="bg-[var(--bg-surface)] border-[var(--border)] rounded-[10px] focus-visible:border-[var(--accent)]"
               />
             </div>
             <div className="space-y-2">
@@ -83,22 +82,20 @@ export default function SignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
+                className="bg-[var(--bg-surface)] border-[var(--border)] rounded-[10px] focus-visible:border-[var(--accent)]"
               />
             </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-2">
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full bg-[var(--accent)] text-[var(--accent-fg)] rounded-[10px] font-medium h-11" disabled={loading}>
               {loading ? "Creating account..." : "Create account"}
             </Button>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-[var(--text-muted)] text-center">
               Already have an account?{" "}
-              <Link href="/login" className="text-primary underline">
+              <Link href="/login" className="text-[var(--accent)] underline">
                 Log in
               </Link>
             </p>
-          </CardFooter>
-        </form>
-      </Card>
+          </form>
+        </div>
       </div>
     </div>
   );

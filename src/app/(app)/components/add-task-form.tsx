@@ -50,7 +50,7 @@ export function AddTaskForm() {
         placeholder="Add a task..."
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        className="flex-1"
+        className="flex-1 bg-[var(--bg-surface)] border-[var(--border)] rounded-[10px] text-[0.9rem] focus-visible:border-[var(--accent)]"
         disabled={isPending}
       />
       <Popover>
@@ -84,7 +84,7 @@ export function AddTaskForm() {
           )}
         </PopoverContent>
       </Popover>
-      <Button type="submit" size="sm" disabled={isPending || !title.trim()}>
+      <Button type="submit" disabled={isPending || !title.trim()} className="bg-[var(--accent)] text-[var(--accent-fg)] font-medium rounded-lg">
         <Plus className="size-4" />
         Add
       </Button>
