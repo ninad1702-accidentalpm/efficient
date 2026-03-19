@@ -290,7 +290,13 @@ export function TaskList({ tasks }: TaskListProps) {
         {upcomingOpen && (
           <div className="mt-1">
             {upcomingTasks.length === 0 ? (
-              noMatchMessage
+              query || upcomingFilter !== "all" ? (
+                noMatchMessage
+              ) : (
+                <p className="px-3 py-4 text-center text-sm text-muted-foreground">
+                  No upcoming tasks — you're all caught up!
+                </p>
+              )
             ) : (
               upcomingTasks.map((task) => (
                 <TaskItem key={task.id} task={task} />
@@ -328,7 +334,9 @@ export function TaskList({ tasks }: TaskListProps) {
         {completedOpen && (
           <div className="mt-1">
             {filteredCompletedTasks.length === 0 ? (
-              noMatchMessage
+              <p className="px-3 py-4 text-center text-sm text-muted-foreground">
+                Your completed tasks will appear here.
+              </p>
             ) : (
               filteredCompletedTasks.map((task) => (
                 <TaskItem key={task.id} task={task} />
