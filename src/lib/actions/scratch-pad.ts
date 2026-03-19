@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getPostHogServer } from "@/lib/posthog-server";
 import type { TaskStatus } from "@/lib/types";
 
 export async function saveScratchPad(content: string) {
@@ -18,6 +19,8 @@ export async function saveScratchPad(content: string) {
     .eq("user_id", user.id)
     .single();
 
+  const isNew = !existing;
+
   if (existing) {
     const { error } = await supabase
       .from("scratch_pad")
@@ -30,6 +33,13 @@ export async function saveScratchPad(content: string) {
       .insert({ user_id: user.id, content });
     if (error) throw new Error(error.message);
   }
+
+  const ph = getPostHogServer();
+  ph.capture({
+    distinctId: user.id,
+    event: "scratch_pad_save_server",
+    properties: { content_length: content.length, is_new: isNew },
+  });
 }
 
 export async function confirmSuggestion(
@@ -79,6 +89,13 @@ export async function confirmSuggestion(
     metadata: { source: "scratch_pad", suggestion_id: suggestionId, due_date: dueDate },
   });
 
+  const ph = getPostHogServer();
+  ph.capture({
+    distinctId: user.id,
+    event: "scratch_pad_suggestion_confirmed_server",
+    properties: { has_due_date: !!dueDate },
+  });
+
   revalidatePath("/");
   revalidatePath("/scratch-pad");
   return task;
@@ -98,6 +115,12 @@ export async function dismissSuggestion(suggestionId: string) {
     .eq("user_id", user.id);
 
   if (error) throw new Error(error.message);
+
+  const ph = getPostHogServer();
+  ph.capture({
+    distinctId: user.id,
+    event: "scratch_pad_suggestion_dismissed_server",
+  });
 
   revalidatePath("/scratch-pad");
 }

@@ -4,6 +4,7 @@ import { NavWrapper } from "./components/nav-wrapper";
 import { PushNotificationManager } from "./components/push-notification-manager";
 import { TimezoneSync } from "./components/timezone-sync";
 import { OnboardingModal } from "./components/onboarding-modal";
+import { PostHogIdentify } from "@/components/posthog-identify";
 
 export default async function AppLayout({
   children,
@@ -29,6 +30,7 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-screen">
+      <PostHogIdentify userId={user.id} userEmail={user.email} />
       <TimezoneSync />
       <PushNotificationManager />
       <NavWrapper userEmail={user.email} />

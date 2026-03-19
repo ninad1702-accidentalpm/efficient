@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { usePostHog } from "posthog-js/react";
 import { Button } from "@/components/ui/button";
 
 export default function AppError({
@@ -9,6 +11,15 @@ export default function AppError({
   error: Error;
   reset: () => void;
 }) {
+  const posthog = usePostHog();
+
+  useEffect(() => {
+    posthog?.capture("$exception", {
+      $exception_message: error.message,
+      $exception_stack: error.stack,
+    });
+  }, [error, posthog]);
+
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-4 text-center">
       <h2 className="text-lg font-semibold">Something went wrong</h2>

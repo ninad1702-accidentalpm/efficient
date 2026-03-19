@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useRef, useTransition } from "react";
+import { usePostHog } from "posthog-js/react";
 import { format, parseISO } from "date-fns";
-import { Check, X, Pencil, Calendar } from "lucide-react";
+import { Check, X, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "../components/date-picker";
 import { confirmSuggestion, dismissSuggestion } from "@/lib/actions/scratch-pad";
@@ -18,9 +18,11 @@ export function SuggestionCard({
   suggestion: AiSuggestion;
   onResolved: (id: string, accepted: boolean) => void;
 }) {
+  const posthog = usePostHog();
   const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(suggestion.suggested_title);
+  const originalTitleRef = useRef(suggestion.suggested_title);
   const [dueDate, setDueDate] = useState<Date | undefined>(
     suggestion.suggested_due_date
       ? parseISO(suggestion.suggested_due_date)
@@ -28,6 +30,10 @@ export function SuggestionCard({
   );
 
   function handleConfirm() {
+    posthog?.capture("scratch_pad_suggestion_accepted", {
+      has_due_date: !!dueDate,
+      title_was_edited: title !== originalTitleRef.current,
+    });
     startTransition(async () => {
       await confirmSuggestion(
         suggestion.id,
@@ -39,9 +45,27 @@ export function SuggestionCard({
   }
 
   function handleDismiss() {
+    posthog?.capture("scratch_pad_suggestion_dismissed");
     startTransition(async () => {
       await dismissSuggestion(suggestion.id);
       onResolved(suggestion.id, false);
+    });
+  }
+
+  function handleTitleEditEnd() {
+    setEditing(false);
+    if (title !== originalTitleRef.current) {
+      posthog?.capture("scratch_pad_suggestion_title_edited", {
+        original_length: originalTitleRef.current.length,
+        new_length: title.length,
+      });
+    }
+  }
+
+  function handleDateSelect(date: Date | undefined) {
+    setDueDate(date);
+    posthog?.capture("scratch_pad_suggestion_date_changed", {
+      action: date ? "set" : "removed",
     });
   }
 
@@ -54,13 +78,13 @@ export function SuggestionCard({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") setEditing(false);
+                if (e.key === "Enter") handleTitleEditEnd();
                 if (e.key === "Escape") {
                   setTitle(suggestion.suggested_title);
                   setEditing(false);
                 }
               }}
-              onBlur={() => setEditing(false)}
+              onBlur={handleTitleEditEnd}
               autoFocus
               className="h-8 text-sm"
             />
@@ -76,7 +100,7 @@ export function SuggestionCard({
           <div className="mt-1 flex items-center gap-1.5">
             <DatePicker
               date={dueDate}
-              onSelect={setDueDate}
+              onSelect={handleDateSelect}
               placeholder="Add due date"
               className="h-6 text-xs"
             />
@@ -84,7 +108,7 @@ export function SuggestionCard({
               <Button
                 variant="ghost"
                 size="icon-xs"
-                onClick={() => setDueDate(undefined)}
+                onClick={() => handleDateSelect(undefined)}
                 title="Remove due date"
               >
                 <X className="size-3 text-muted-foreground" />

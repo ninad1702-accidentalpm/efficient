@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { PostHogProvider } from "@/components/posthog-provider";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -48,9 +49,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${dmSans.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable}`}>
       <body className="antialiased">
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <PostHogProvider>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </PostHogProvider>
       </body>
     </html>
   );

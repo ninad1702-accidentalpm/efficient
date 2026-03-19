@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import { usePostHog } from "posthog-js/react";
 import { CheckCircle2, ListPlus, Sparkles, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ export function ScratchPadEditor({
   initialLastProcessed: string | null;
   initialSuggestions: AiSuggestion[];
 }) {
+  const posthog = usePostHog();
   const [content, setContent] = useState(initialContent);
   const [lastProcessed, setLastProcessed] = useState(initialLastProcessed);
   const [suggestions, setSuggestions] = useState(initialSuggestions);
@@ -34,6 +36,7 @@ export function ScratchPadEditor({
   const latestContentRef = useRef(content);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [leftoverSource, setLeftoverSource] = useState<"suggest" | "add" | null>(null);
+  const clearConfirmedRef = useRef(false);
 
   // Keep latestContentRef in sync so the parse callback sees the latest value
   useEffect(() => {
@@ -46,6 +49,13 @@ export function ScratchPadEditor({
     // Skip if content is empty or a parse is already running
     if (!savedContent.trim()) return;
     if (isParsingRef.current) return;
+
+    const mode = autoAdd ? "add" : "suggest";
+    const parseStart = performance.now();
+    posthog?.capture("scratch_pad_parse_started", {
+      mode,
+      content_length: savedContent.length,
+    });
 
     isParsingRef.current = true;
     setStatus(autoAdd ? "adding" : "parsing");
@@ -72,6 +82,11 @@ export function ScratchPadEditor({
           for (const s of newSuggestions) {
             await confirmSuggestion(s.id, s.suggested_title, s.suggested_due_date);
           }
+          const addDuration = performance.now() - parseStart;
+          posthog?.capture("scratch_pad_tasks_auto_added", {
+            count: newSuggestions.length,
+            duration_ms: Math.round(addDuration),
+          });
           setAddedCount(newSuggestions.length);
           setTimeout(() => setAddedCount(0), 3000);
           // Remove source_text of each added task, clean up artifacts
@@ -92,14 +107,28 @@ export function ScratchPadEditor({
           await saveScratchPad(updated);
         } else {
           setSuggestions((prev) => [...newSuggestions, ...prev]);
+          posthog?.capture("scratch_pad_suggestions_shown", {
+            count: newSuggestions.length,
+          });
         }
       }
+
+      posthog?.capture("scratch_pad_parse_completed", {
+        mode,
+        duration_ms: Math.round(performance.now() - parseStart),
+        suggestion_count: newSuggestions?.length ?? 0,
+      });
 
       if (autoAdd) {
         await updateLastProcessed(savedContent);
         setLastProcessed(savedContent);
       }
     } catch (error) {
+      posthog?.capture("scratch_pad_parse_failed", {
+        mode,
+        duration_ms: Math.round(performance.now() - parseStart),
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
       console.error("Parse error:", error);
     } finally {
       isParsingRef.current = false;
@@ -117,27 +146,44 @@ export function ScratchPadEditor({
       saveTimeoutRef.current = setTimeout(async () => {
         try {
           await saveScratchPad(value);
+          posthog?.capture("scratch_pad_autosave_completed", {
+            content_length: value.length,
+          });
           setStatus("saved");
           setTimeout(() => setStatus("idle"), 1000);
-        } catch {
+        } catch (err) {
+          posthog?.capture("scratch_pad_autosave_failed", {
+            error: err instanceof Error ? err.message : "Unknown error",
+          });
           setStatus("idle");
         }
       }, 1000);
     },
-    []
+    [posthog]
   );
 
   function handleSuggestTasks() {
+    posthog?.capture("scratch_pad_suggest_clicked", {
+      content_length: latestContentRef.current.length,
+    });
     setLeftoverSource(null);
     parseContent(latestContentRef.current, lastProcessed);
   }
 
   function handleAddTasks() {
+    posthog?.capture("scratch_pad_add_clicked", {
+      content_length: latestContentRef.current.length,
+    });
     setLeftoverSource(null);
     parseContent(latestContentRef.current, lastProcessed, true);
   }
 
   async function handleClearConfirm() {
+    posthog?.capture("scratch_pad_clear_confirmed", {
+      content_length: content.length,
+      suggestion_count: suggestions.length,
+    });
+    clearConfirmedRef.current = true;
     setClearDialogOpen(false);
     setContent("");
     latestContentRef.current = "";
@@ -230,7 +276,13 @@ export function ScratchPadEditor({
             {status === "adding" ? "Adding tasks..." : "Add tasks"}
           </Button>
           <Button
-            onClick={() => setClearDialogOpen(true)}
+            onClick={() => {
+              posthog?.capture("scratch_pad_clear_clicked", {
+                content_length: content.length,
+                suggestion_count: suggestions.length,
+              });
+              setClearDialogOpen(true);
+            }}
             disabled={!content.trim() || isBusy}
             variant="outline"
             className="gap-1.5 bg-transparent border-[var(--border)] text-[var(--text-muted)] rounded-lg hover:border-[#E85547] hover:text-[#E85547]"
@@ -270,7 +322,16 @@ export function ScratchPadEditor({
         </div>
       )}
 
-      <Dialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+      <Dialog
+        open={clearDialogOpen}
+        onOpenChange={(open) => {
+          if (!open && !clearConfirmedRef.current) {
+            posthog?.capture("scratch_pad_clear_cancelled");
+          }
+          clearConfirmedRef.current = false;
+          setClearDialogOpen(open);
+        }}
+      >
         <DialogContent showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>Clear your scratch pad?</DialogTitle>

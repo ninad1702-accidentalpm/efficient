@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getPostHogServer } from "@/lib/posthog-server";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -60,6 +61,15 @@ Text to analyze:
 ${textToProcess}
 """`;
 
+  const ph = getPostHogServer();
+  const aiStart = performance.now();
+
+  ph.capture({
+    distinctId: user.id,
+    event: "scratch_pad_ai_request",
+    properties: { text_length: textToProcess.length },
+  });
+
   try {
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -76,6 +86,11 @@ ${textToProcess}
     if (!res.ok) {
       const err = await res.text();
       console.error("OpenRouter API error:", res.status, err);
+      ph.capture({
+        distinctId: user.id,
+        event: "scratch_pad_ai_error",
+        properties: { error: "AI service error", status_code: res.status },
+      });
       return NextResponse.json(
         { error: "AI service error" },
         { status: 502 }
@@ -138,9 +153,28 @@ ${textToProcess}
       .insert(rows)
       .select();
 
+    const duplicatesFiltered = suggestions.length - newSuggestions.length;
+
+    ph.capture({
+      distinctId: user.id,
+      event: "scratch_pad_ai_response",
+      properties: {
+        duration_ms: Math.round(performance.now() - aiStart),
+        suggestion_count: newSuggestions.length,
+        duplicates_filtered: duplicatesFiltered,
+      },
+    });
+
     return NextResponse.json({ suggestions: saved ?? [] });
   } catch (error) {
     console.error("AI parsing error:", error);
+    ph.capture({
+      distinctId: user.id,
+      event: "scratch_pad_ai_error",
+      properties: {
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+    });
     return NextResponse.json(
       { error: "Failed to parse content with AI" },
       { status: 500 }
