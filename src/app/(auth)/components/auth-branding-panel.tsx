@@ -21,23 +21,35 @@ const features = [
   },
 ];
 
+const featureDelays = ["delay-100", "delay-200", "delay-300"] as const;
+
 export function AuthFeaturesMobile() {
   return (
-    <div className="flex flex-col items-center space-y-2 lg:hidden">
-      <p className="text-xs tracking-wide text-[var(--text-muted)]">
+    <div className="flex flex-col items-center space-y-5 lg:hidden">
+      <p className="text-sm uppercase tracking-[0.2em] text-[var(--text-muted)] animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
         Capture. Organise. Complete.
       </p>
-      {features.map((f) => (
-        <div key={f.title} className="inline-flex items-center gap-2">
-          <f.icon
-            className="size-3.5 shrink-0 text-[var(--accent)]"
-            strokeWidth={2}
-          />
-          <span className="text-xs font-medium text-[var(--text-primary)]">
-            {f.title}
-          </span>
-        </div>
-      ))}
+      <div className="space-y-3 w-full">
+        {features.map((f, i) => (
+          <div
+            key={f.title}
+            className={`flex flex-col items-center text-center animate-in fade-in-0 slide-in-from-bottom-2 duration-500 fill-mode-backwards ${featureDelays[i]}`}
+          >
+            <div className="inline-flex items-center gap-2 mb-0.5">
+              <f.icon
+                className="size-4 shrink-0 text-[var(--accent)]"
+                strokeWidth={2}
+              />
+              <span className="text-sm font-medium text-[var(--text-primary)]">
+                {f.title}
+              </span>
+            </div>
+            <p className="text-xs leading-relaxed text-[var(--text-secondary)] max-w-[240px]">
+              {f.description}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

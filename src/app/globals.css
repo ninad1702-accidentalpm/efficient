@@ -174,3 +174,10 @@
     opacity: 0.025;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+  }
+}
