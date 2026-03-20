@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { format, parseISO } from "date-fns";
 
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { DatePicker } from "./date-picker";
-import { updateTask } from "@/lib/actions/tasks";
+import { useTaskContext } from "./task-context";
 import type { Task } from "@/lib/types";
 
 interface EditTaskDialogProps {
@@ -25,24 +25,22 @@ interface EditTaskDialogProps {
 }
 
 export function EditTaskDialog({ task, open, onOpenChange }: EditTaskDialogProps) {
+  const { updateTask } = useTaskContext();
   const [title, setTitle] = useState(task.title);
   const [dueDate, setDueDate] = useState<Date | undefined>(
     task.due_date ? parseISO(task.due_date) : undefined
   );
-  const [isPending, startTransition] = useTransition();
 
   function handleSave() {
     const trimmed = title.trim();
     if (!trimmed) return;
 
-    startTransition(async () => {
-      await updateTask(
-        task.id,
-        trimmed,
-        dueDate ? format(dueDate, "yyyy-MM-dd") : null
-      );
-      onOpenChange(false);
-    });
+    onOpenChange(false);
+    updateTask(
+      task.id,
+      trimmed,
+      dueDate ? format(dueDate, "yyyy-MM-dd") : null
+    );
   }
 
   return (
@@ -87,8 +85,8 @@ export function EditTaskDialog({ task, open, onOpenChange }: EditTaskDialogProps
           <DialogClose render={<Button variant="outline" />}>
             Cancel
           </DialogClose>
-          <Button onClick={handleSave} disabled={isPending || !title.trim()}>
-            {isPending ? "Saving..." : "Save"}
+          <Button onClick={handleSave} disabled={!title.trim()}>
+            Save
           </Button>
         </DialogFooter>
       </DialogContent>

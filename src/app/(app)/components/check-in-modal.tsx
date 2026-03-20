@@ -69,9 +69,9 @@ export function CheckInModal({ type, tasks, onClose }: CheckInModalProps) {
     setNewTaskTitle("");
     setNewTaskDueDate(new Date());
     startTransition(async () => {
-      const task = await addTask(trimmed, dueDate);
-      if (task) {
-        setLocalTasks((prev) => [task, ...prev]);
+      const result = await addTask(trimmed, dueDate);
+      if (result.success) {
+        setLocalTasks((prev) => [result.data, ...prev]);
       }
     });
   }

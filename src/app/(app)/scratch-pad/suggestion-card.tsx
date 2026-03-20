@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "../components/date-picker";
+import { toast } from "sonner";
 import { confirmSuggestion, dismissSuggestion } from "@/lib/actions/scratch-pad";
 import type { AiSuggestion } from "@/lib/types";
 
@@ -35,11 +36,15 @@ export function SuggestionCard({
       title_was_edited: title !== originalTitleRef.current,
     });
     startTransition(async () => {
-      await confirmSuggestion(
+      const result = await confirmSuggestion(
         suggestion.id,
         title,
         dueDate ? format(dueDate, "yyyy-MM-dd") : null
       );
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
       onResolved(suggestion.id, true);
     });
   }
@@ -47,7 +52,11 @@ export function SuggestionCard({
   function handleDismiss() {
     posthog?.capture("scratch_pad_suggestion_dismissed");
     startTransition(async () => {
-      await dismissSuggestion(suggestion.id);
+      const result = await dismissSuggestion(suggestion.id);
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
       onResolved(suggestion.id, false);
     });
   }

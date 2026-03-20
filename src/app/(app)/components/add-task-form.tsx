@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import { format, parseISO, startOfDay } from "date-fns";
 import { CalendarIcon, Plus } from "lucide-react";
 
@@ -8,12 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { addTask } from "@/lib/actions/tasks";
+import { useTaskContext } from "./task-context";
 
 export function AddTaskForm() {
+  const { addTask } = useTaskContext();
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState<Date | undefined>();
-  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     const stored = localStorage.getItem("last-task-due-date");
@@ -32,16 +32,11 @@ export function AddTaskForm() {
     const trimmed = title.trim();
     if (!trimmed) return;
 
-    startTransition(async () => {
-      await addTask(
-        trimmed,
-        dueDate ? format(dueDate, "yyyy-MM-dd") : null
-      );
-      setTitle("");
-      if (dueDate) {
-        localStorage.setItem("last-task-due-date", format(dueDate, "yyyy-MM-dd"));
-      }
-    });
+    if (dueDate) {
+      localStorage.setItem("last-task-due-date", format(dueDate, "yyyy-MM-dd"));
+    }
+    setTitle("");
+    addTask(trimmed, dueDate);
   }
 
   return (
@@ -51,7 +46,6 @@ export function AddTaskForm() {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         className="flex-1 bg-[var(--bg-surface)] border-[var(--border)] rounded-[10px] text-[0.9rem] focus-visible:border-[var(--accent)]"
-        disabled={isPending}
       />
       <Popover>
         <PopoverTrigger
@@ -84,7 +78,7 @@ export function AddTaskForm() {
           )}
         </PopoverContent>
       </Popover>
-      <Button type="submit" disabled={isPending || !title.trim()} className="bg-[var(--accent)] text-[var(--accent-fg)] font-medium rounded-lg">
+      <Button type="submit" disabled={!title.trim()} className="bg-[var(--accent)] text-[var(--accent-fg)] font-medium rounded-lg">
         <Plus className="size-4" />
         Add
       </Button>

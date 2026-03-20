@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useTransition } from "react";
+import { useState, useRef, useEffect } from "react";
 import { isToday, isBefore, startOfDay, parseISO, format } from "date-fns";
 import {
   ArchiveIcon,
@@ -11,6 +11,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { TaskItem } from "./task-item";
+import { useTaskContext } from "./task-context";
 import {
   Tooltip,
   TooltipContent,
@@ -28,15 +29,9 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { archiveCompletedTasks } from "@/lib/actions/tasks";
-import type { Task } from "@/lib/types";
 
 type TodayFilter = "all" | "overdue" | "due_today";
 type UpcomingFilter = "all" | "someday";
-
-interface TaskListProps {
-  tasks: Task[];
-}
 
 function FilterPill({
   label,
@@ -64,7 +59,9 @@ function FilterPill({
   );
 }
 
-export function TaskList({ tasks }: TaskListProps) {
+export function TaskList() {
+  const { tasks, archiveCompleted } = useTaskContext();
+
   const [todayOpen, setTodayOpen] = useState(true);
   const [upcomingOpen, setUpcomingOpen] = useState(true);
   const [completedOpen, setCompletedOpen] = useState(true);
@@ -77,13 +74,10 @@ export function TaskList({ tasks }: TaskListProps) {
   const [upcomingFilter, setUpcomingFilter] = useState<UpcomingFilter>("all");
 
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
 
   function handleArchiveAll() {
     setArchiveConfirmOpen(false);
-    startTransition(async () => {
-      await archiveCompletedTasks();
-    });
+    archiveCompleted();
   }
 
   useEffect(() => {
@@ -321,8 +315,7 @@ export function TaskList({ tasks }: TaskListProps) {
               <Tooltip>
                 <TooltipTrigger
                   onClick={() => setArchiveConfirmOpen(true)}
-                  disabled={isPending}
-                  className="rounded-md p-1 text-muted-foreground hover:text-foreground disabled:opacity-50"
+                  className="rounded-md p-1 text-muted-foreground hover:text-foreground"
                 >
                   <ArchiveIcon className="size-3.5" />
                 </TooltipTrigger>
@@ -362,7 +355,6 @@ export function TaskList({ tasks }: TaskListProps) {
             <Button
               variant="destructive"
               onClick={handleArchiveAll}
-              disabled={isPending}
             >
               Clear all
             </Button>

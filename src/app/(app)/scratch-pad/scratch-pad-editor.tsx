@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { SuggestionCard } from "./suggestion-card";
+import { toast } from "sonner";
 import { saveScratchPad, updateLastProcessed, confirmSuggestion } from "@/lib/actions/scratch-pad";
 import type { AiSuggestion } from "@/lib/types";
 
@@ -78,10 +79,12 @@ export function ScratchPadEditor({
 
       if (newSuggestions && newSuggestions.length > 0) {
         if (autoAdd) {
-          // Automatically confirm each suggestion as a task
-          for (const s of newSuggestions) {
-            await confirmSuggestion(s.id, s.suggested_title, s.suggested_due_date);
-          }
+          // Automatically confirm all suggestions in parallel
+          await Promise.all(
+            newSuggestions.map((s: AiSuggestion) =>
+              confirmSuggestion(s.id, s.suggested_title, s.suggested_due_date)
+            )
+          );
           const addDuration = performance.now() - parseStart;
           posthog?.capture("scratch_pad_tasks_auto_added", {
             count: newSuggestions.length,
@@ -129,6 +132,7 @@ export function ScratchPadEditor({
         duration_ms: Math.round(performance.now() - parseStart),
         error: error instanceof Error ? error.message : "Unknown error",
       });
+      toast.error("Couldn't extract tasks. Please try again.");
       console.error("Parse error:", error);
     } finally {
       isParsingRef.current = false;
@@ -155,6 +159,7 @@ export function ScratchPadEditor({
           posthog?.capture("scratch_pad_autosave_failed", {
             error: err instanceof Error ? err.message : "Unknown error",
           });
+          toast.error("Your changes couldn't be saved.");
           setStatus("idle");
         }
       }, 1000);

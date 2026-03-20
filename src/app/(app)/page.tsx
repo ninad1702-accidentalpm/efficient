@@ -1,11 +1,10 @@
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { TaskProvider } from "./components/task-context";
 import { TaskList } from "./components/task-list";
 import { AddTaskForm } from "./components/add-task-form";
 import { CheckInTrigger } from "./components/check-in-trigger";
 import type { Task } from "@/lib/types";
-
-export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -70,8 +69,10 @@ export default async function DashboardPage() {
       <Suspense>
         <CheckInTrigger />
       </Suspense>
-      <AddTaskForm />
-      <TaskList tasks={(tasks as Task[]) ?? []} />
+      <TaskProvider initialTasks={(tasks as Task[]) ?? []}>
+        <AddTaskForm />
+        <TaskList />
+      </TaskProvider>
     </div>
   );
 }

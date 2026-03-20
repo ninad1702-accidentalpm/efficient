@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { DM_Sans, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PostHogProvider } from "@/components/posthog-provider";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -52,6 +53,11 @@ export default function RootLayout({
         <PostHogProvider>
           <ThemeProvider>
             {children}
+            <Toaster
+              position="bottom-center"
+              richColors
+              toastOptions={{ className: "font-sans" }}
+            />
           </ThemeProvider>
         </PostHogProvider>
       </body>

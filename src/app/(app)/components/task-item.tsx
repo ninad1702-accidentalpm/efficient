@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { format, parseISO, isToday, isBefore, startOfDay } from "date-fns";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 
@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { toggleComplete, deleteTask } from "@/lib/actions/tasks";
+import { useTaskContext } from "./task-context";
 import { EditTaskDialog } from "./edit-task-dialog";
 import { SnoozePicker } from "./snooze-picker";
 import type { Task } from "@/lib/types";
@@ -25,20 +25,16 @@ interface TaskItemProps {
 }
 
 export function TaskItem({ task }: TaskItemProps) {
+  const { toggleComplete, deleteTask } = useTaskContext();
   const [editOpen, setEditOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
   const isCompleted = task.status === "completed";
 
   function handleToggle() {
-    startTransition(async () => {
-      await toggleComplete(task.id);
-    });
+    toggleComplete(task.id);
   }
 
   function handleDelete() {
-    startTransition(async () => {
-      await deleteTask(task.id);
-    });
+    deleteTask(task.id);
   }
 
   function getDateBadge() {
@@ -75,15 +71,11 @@ export function TaskItem({ task }: TaskItemProps) {
   return (
     <>
       <div
-        className={cn(
-          "group flex items-center gap-3 rounded-[10px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3.5 py-3 mb-1.5 transition-colors hover:bg-[var(--bg-elevated)] hover:border-[var(--border)]",
-          isPending && "opacity-50"
-        )}
+        className="group flex items-center gap-3 rounded-[10px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3.5 py-3 mb-1.5 transition-colors hover:bg-[var(--bg-elevated)] hover:border-[var(--border)]"
       >
         <Checkbox
           checked={isCompleted}
           onCheckedChange={handleToggle}
-          disabled={isPending}
         />
         <span
           className={cn(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { addDays, nextMonday, format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
@@ -8,21 +8,19 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { Clock } from "lucide-react";
-import { snoozeTask } from "@/lib/actions/tasks";
+import { useTaskContext } from "./task-context";
 
 interface SnoozePickerProps {
   taskId: string;
 }
 
 export function SnoozePicker({ taskId }: SnoozePickerProps) {
+  const { snoozeTask } = useTaskContext();
   const [open, setOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
 
   function handleSnooze(date: Date) {
-    startTransition(async () => {
-      await snoozeTask(taskId, date.toISOString());
-      setOpen(false);
-    });
+    setOpen(false);
+    snoozeTask(taskId, date.toISOString());
   }
 
   const tomorrow = addDays(new Date(), 1);
@@ -47,7 +45,6 @@ export function SnoozePicker({ taskId }: SnoozePickerProps) {
             variant="ghost"
             size="sm"
             className="justify-start"
-            disabled={isPending}
             onClick={() => handleSnooze(tomorrow)}
           >
             Tomorrow ({format(tomorrow, "EEE, MMM d")})
@@ -56,7 +53,6 @@ export function SnoozePicker({ taskId }: SnoozePickerProps) {
             variant="ghost"
             size="sm"
             className="justify-start"
-            disabled={isPending}
             onClick={() => handleSnooze(nextWeek)}
           >
             Next Week ({format(nextWeek, "EEE, MMM d")})

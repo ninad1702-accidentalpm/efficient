@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { TaskStatus } from "@/lib/types";
+import type { ActionResult, Task, TaskStatus } from "@/lib/types";
 
 async function logActivity(
   userId: string,
@@ -22,12 +22,19 @@ async function logActivity(
   });
 }
 
-export async function addTask(title: string, dueDate: string | null) {
+export async function addTask(
+  title: string,
+  dueDate: string | null
+): Promise<ActionResult<Task>> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  if (!user)
+    return {
+      success: false,
+      error: "Your session has expired. Please log in again.",
+    };
 
   const status: TaskStatus = dueDate ? "pending" : "someday";
 
@@ -42,7 +49,8 @@ export async function addTask(title: string, dueDate: string | null) {
     .select()
     .single();
 
-  if (error) throw new Error(error.message);
+  if (error)
+    return { success: false, error: "Something went wrong. Please try again." };
 
   // Fire-and-forget — don't block the user waiting for the log insert
   logActivity(user.id, "task_created", data.id, title, {
@@ -51,15 +59,21 @@ export async function addTask(title: string, dueDate: string | null) {
   });
 
   revalidatePath("/");
-  return data;
+  return { success: true, data: data as Task };
 }
 
-export async function toggleComplete(taskId: string) {
+export async function toggleComplete(
+  taskId: string
+): Promise<ActionResult<void>> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  if (!user)
+    return {
+      success: false,
+      error: "Your session has expired. Please log in again.",
+    };
 
   const { data: task, error: fetchError } = await supabase
     .from("tasks")
@@ -68,7 +82,11 @@ export async function toggleComplete(taskId: string) {
     .eq("user_id", user.id)
     .single();
 
-  if (fetchError || !task) throw new Error("Task not found");
+  if (fetchError || !task)
+    return {
+      success: false,
+      error: "This task could not be found. It may have been deleted.",
+    };
 
   const isCompleting = task.status !== "completed";
 
@@ -90,7 +108,8 @@ export async function toggleComplete(taskId: string) {
     .eq("id", taskId)
     .eq("user_id", user.id);
 
-  if (error) throw new Error(error.message);
+  if (error)
+    return { success: false, error: "Something went wrong. Please try again." };
 
   logActivity(
     user.id,
@@ -100,14 +119,21 @@ export async function toggleComplete(taskId: string) {
   );
 
   revalidatePath("/");
+  return { success: true, data: undefined };
 }
 
-export async function deleteTask(taskId: string) {
+export async function deleteTask(
+  taskId: string
+): Promise<ActionResult<void>> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  if (!user)
+    return {
+      success: false,
+      error: "Your session has expired. Please log in again.",
+    };
 
   const { data: task } = await supabase
     .from("tasks")
@@ -122,25 +148,31 @@ export async function deleteTask(taskId: string) {
     .eq("id", taskId)
     .eq("user_id", user.id);
 
-  if (error) throw new Error(error.message);
+  if (error)
+    return { success: false, error: "Something went wrong. Please try again." };
 
   if (task) {
     logActivity(user.id, "task_deleted", taskId, task.title);
   }
 
   revalidatePath("/");
+  return { success: true, data: undefined };
 }
 
 export async function updateTask(
   taskId: string,
   title: string,
   dueDate: string | null
-) {
+): Promise<ActionResult<void>> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  if (!user)
+    return {
+      success: false,
+      error: "Your session has expired. Please log in again.",
+    };
 
   // Determine status: if task was pending/someday, adjust based on new due_date
   const { data: existing } = await supabase
@@ -150,7 +182,11 @@ export async function updateTask(
     .eq("user_id", user.id)
     .single();
 
-  if (!existing) throw new Error("Task not found");
+  if (!existing)
+    return {
+      success: false,
+      error: "This task could not be found. It may have been deleted.",
+    };
 
   let newStatus: TaskStatus = existing.status;
   // Only adjust status for non-completed, non-snoozed tasks
@@ -168,7 +204,8 @@ export async function updateTask(
     .eq("id", taskId)
     .eq("user_id", user.id);
 
-  if (error) throw new Error(error.message);
+  if (error)
+    return { success: false, error: "Something went wrong. Please try again." };
 
   logActivity(user.id, "task_updated", taskId, title, {
     old_title: existing.title,
@@ -176,6 +213,7 @@ export async function updateTask(
   });
 
   revalidatePath("/");
+  return { success: true, data: undefined };
 }
 
 export async function logCheckin(type: "morning" | "evening") {
@@ -193,12 +231,18 @@ export async function logCheckin(type: "morning" | "evening") {
   });
 }
 
-export async function archiveCompletedTasks(olderThanDays?: number) {
+export async function archiveCompletedTasks(
+  olderThanDays?: number
+): Promise<ActionResult<number>> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  if (!user)
+    return {
+      success: false,
+      error: "Your session has expired. Please log in again.",
+    };
 
   let query = supabase
     .from("tasks")
@@ -218,10 +262,16 @@ export async function archiveCompletedTasks(olderThanDays?: number) {
 
   if (count > 0) {
     const ids = matchingTasks!.map((t) => t.id);
-    await supabase
+    const { error } = await supabase
       .from("tasks")
       .update({ archived_at: new Date().toISOString() })
       .in("id", ids);
+
+    if (error)
+      return {
+        success: false,
+        error: "Something went wrong. Please try again.",
+      };
 
     await supabase.from("activity_log").insert({
       user_id: user.id,
@@ -234,15 +284,22 @@ export async function archiveCompletedTasks(olderThanDays?: number) {
   }
 
   revalidatePath("/");
-  return count;
+  return { success: true, data: count };
 }
 
-export async function snoozeTask(taskId: string, snoozeUntil: string) {
+export async function snoozeTask(
+  taskId: string,
+  snoozeUntil: string
+): Promise<ActionResult<void>> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  if (!user)
+    return {
+      success: false,
+      error: "Your session has expired. Please log in again.",
+    };
 
   const { data: task } = await supabase
     .from("tasks")
@@ -251,7 +308,11 @@ export async function snoozeTask(taskId: string, snoozeUntil: string) {
     .eq("user_id", user.id)
     .single();
 
-  if (!task) throw new Error("Task not found");
+  if (!task)
+    return {
+      success: false,
+      error: "This task could not be found. It may have been deleted.",
+    };
 
   const { error } = await supabase
     .from("tasks")
@@ -262,11 +323,13 @@ export async function snoozeTask(taskId: string, snoozeUntil: string) {
     .eq("id", taskId)
     .eq("user_id", user.id);
 
-  if (error) throw new Error(error.message);
+  if (error)
+    return { success: false, error: "Something went wrong. Please try again." };
 
   logActivity(user.id, "task_snoozed", taskId, task.title, {
     snooze_until: snoozeUntil,
   });
 
   revalidatePath("/");
+  return { success: true, data: undefined };
 }
