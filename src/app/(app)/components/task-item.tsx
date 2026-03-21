@@ -79,7 +79,7 @@ export function TaskItem({ task }: TaskItemProps) {
         />
         <span
           className={cn(
-            "flex-1 truncate text-[0.9rem] text-[var(--text-primary)]",
+            "flex-1 line-clamp-2 text-[0.9rem] text-[var(--text-primary)]",
             isCompleted && "opacity-50 line-through"
           )}
         >
