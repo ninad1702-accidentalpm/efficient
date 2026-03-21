@@ -25,9 +25,11 @@ import type { Task } from "@/lib/types";
 
 interface TaskItemProps {
   task: Task;
+  viewContext?: "today" | "upcoming" | "completed";
+  onDelete?: () => void;
 }
 
-export function TaskItem({ task }: TaskItemProps) {
+export function TaskItem({ task, viewContext, onDelete }: TaskItemProps) {
   const { toggleComplete, deleteTask, skipTask } = useTaskContext();
   const [editOpen, setEditOpen] = useState(false);
   const [editScopeOpen, setEditScopeOpen] = useState(false);
@@ -66,6 +68,7 @@ export function TaskItem({ task }: TaskItemProps) {
   }
 
   function getDateBadge() {
+    if (viewContext === "today") return null;
     if (task.status === "someday") {
       return <Badge className="border border-[var(--someday)] bg-[var(--someday-bg)] text-[var(--someday)] text-[0.72rem] rounded-full">Someday</Badge>;
     }
@@ -117,31 +120,52 @@ export function TaskItem({ task }: TaskItemProps) {
           <Repeat className="size-3.5 text-muted-foreground" />
         )}
         {getDateBadge()}
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                className="opacity-50 hover:opacity-100 data-popup-open:opacity-100"
-              />
-            }
-          >
-            <MoreHorizontal className="size-4" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleEditClick}>
-              <Pencil className="size-4" />
-              Edit
-            </DropdownMenuItem>
-            {!isCompleted && <SnoozePicker taskId={task.id} />}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onClick={handleDeleteClick}>
-              <Trash2 className="size-4" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {viewContext === "completed" ? (
+          <>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={handleEditClick}
+              className="opacity-50 hover:opacity-100"
+            >
+              <Pencil className="size-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={onDelete ?? handleDeleteClick}
+              className="opacity-50 hover:opacity-100 text-destructive"
+            >
+              <Trash2 className="size-3.5" />
+            </Button>
+          </>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  className="opacity-50 hover:opacity-100 data-popup-open:opacity-100"
+                />
+              }
+            >
+              <MoreHorizontal className="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleEditClick}>
+                <Pencil className="size-4" />
+                Edit
+              </DropdownMenuItem>
+              {!isCompleted && <SnoozePicker taskId={task.id} />}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onClick={handleDeleteClick}>
+                <Trash2 className="size-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       <EditTaskDialog task={task} open={editOpen} onOpenChange={setEditOpen} />
