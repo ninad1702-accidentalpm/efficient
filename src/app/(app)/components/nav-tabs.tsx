@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   CheckSquare,
+  ListChecks,
   StickyNote,
   Settings,
   LogOut,
@@ -17,10 +18,10 @@ import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { label: "To-do", href: "/", icon: CheckSquare },
-  { label: "Scratch pad", href: "/scratch-pad", icon: StickyNote },
-  // { label: "Summary", href: "/summary", icon: BarChart3 },
-  { label: "Settings", href: "/settings", icon: Settings },
+  { label: "Today", href: "/", icon: CheckSquare, showInMobile: true },
+  { label: "Task lists", href: "/task-lists", icon: ListChecks, showInMobile: true },
+  { label: "Scratch pad", href: "/scratch-pad", icon: StickyNote, showInMobile: true },
+  { label: "Settings", href: "/settings", icon: Settings, showInMobile: true },
 ];
 
 interface NavTabsProps {
@@ -41,7 +42,7 @@ export function NavTabs({ userEmail, onLogout }: NavTabsProps) {
       {/* ── Mobile bottom nav (below lg) ── */}
       <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-white/[0.06] bg-background pb-[env(safe-area-inset-bottom)] lg:hidden">
         <div className="flex items-center justify-around">
-          {navItems.map((item) => {
+          {navItems.filter((item) => item.showInMobile).map((item) => {
             const active = isActive(item.href);
             return (
               <Link
