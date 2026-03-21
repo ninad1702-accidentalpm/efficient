@@ -247,7 +247,7 @@ export function RecurrenceConfig({ config, onChange }: RecurrenceConfigProps) {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Manage recurring tasks from Settings. Missed tasks are automatically skipped when new ones are generated.
+        Manage recurring tasks from Task lists. Missed tasks are automatically skipped when new ones are generated.
       </p>
     </div>
   );

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { getRecurringTasks } from "@/lib/actions/recurring-tasks";
-import { RecurringManagementList } from "./recurring-management-list";
+import { RecurringManagementList } from "../../components/recurring-management-list";
 import { RecurringGate } from "./recurring-gate";
 
 export default async function RecurringSettingsPage() {

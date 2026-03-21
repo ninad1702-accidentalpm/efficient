@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { Pencil, Repeat, Trash2 } from "lucide-react";
 import { usePostHog } from "posthog-js/react";
 import { toast } from "sonner";
-import { AddTaskModal } from "../../components/add-task-modal";
+import { AddTaskModal } from "./add-task-modal";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,7 @@ import {
   RecurrenceConfig,
   defaultRecurrenceConfig,
   type RecurrenceConfigState,
-} from "../../components/recurrence-config";
+} from "./recurrence-config";
 import {
   updateRecurringTask,
   archiveRecurringTask,

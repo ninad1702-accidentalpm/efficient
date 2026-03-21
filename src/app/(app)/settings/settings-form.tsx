@@ -20,9 +20,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "@/components/theme-provider";
 import { FeedbackDialog } from "../components/feedback-dialog";
-import { MessageSquareMore, LogOut, Repeat } from "lucide-react";
-import Link from "next/link";
-import { useFeatureFlag } from "@/lib/use-feature-flag";
+import { MessageSquareMore, LogOut } from "lucide-react";
 
 interface SettingsFormProps {
   morningTime: string;
@@ -96,7 +94,6 @@ export function SettingsForm({
   const [notifSaved, setNotifSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { theme, toggleTheme } = useTheme();
-  const recurringEnabled = useFeatureFlag("recurring-tasks");
 
   async function handleLogout() {
     posthog?.reset();
@@ -275,25 +272,6 @@ export function SettingsForm({
           </div>
         </CardContent>
       </Card>
-
-      {recurringEnabled && (
-        <Card className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[14px] p-6 ring-0">
-          <CardHeader>
-            <CardTitle className="font-display text-[1.1rem] text-[var(--text-primary)]">Recurring Tasks</CardTitle>
-            <CardDescription className="text-[0.8rem] text-[var(--text-muted)]">
-              Manage your recurring task rules and schedules.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/settings/recurring">
-              <Button variant="outline">
-                <Repeat className="size-4" />
-                Manage recurring tasks
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      )}
 
       <Card className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[14px] p-6 ring-0">
         <CardHeader>
