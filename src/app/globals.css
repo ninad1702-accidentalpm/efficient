@@ -63,6 +63,8 @@
   --border: #2A2D3A;
   --border-subtle: #1F2230;
   --shadow: 0 2px 12px rgba(0,0,0,0.4);
+  --someday: #5BA8A0;
+  --someday-bg: rgba(91,168,160,0.10);
 
   --background: var(--bg-base);
   --foreground: var(--text-primary);
@@ -111,6 +113,8 @@
   --border: #D8D4CC;
   --border-subtle: #E8E4DD;
   --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --someday: #4A9A91;
+  --someday-bg: rgba(74,154,145,0.08);
 
   --background: var(--bg-base);
   --foreground: var(--text-primary);

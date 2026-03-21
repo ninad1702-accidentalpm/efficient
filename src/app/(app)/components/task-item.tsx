@@ -67,7 +67,7 @@ export function TaskItem({ task }: TaskItemProps) {
 
   function getDateBadge() {
     if (task.status === "someday") {
-      return <Badge className="border border-[var(--accent)] bg-[rgba(232,197,71,0.08)] text-[var(--accent)] text-[0.72rem] rounded-full">Someday</Badge>;
+      return <Badge className="border border-[var(--someday)] bg-[var(--someday-bg)] text-[var(--someday)] text-[0.72rem] rounded-full">Someday</Badge>;
     }
     if (!task.due_date) return null;
 
