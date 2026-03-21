@@ -49,7 +49,7 @@ export async function saveScratchPad(
   }
 
   const ph = getPostHogServer();
-  ph.capture({
+  ph?.capture({
     distinctId: user.id,
     event: "scratch_pad_save_server",
     properties: { content_length: content.length, is_new: isNew },
@@ -116,7 +116,7 @@ export async function confirmSuggestion(
   });
 
   const ph = getPostHogServer();
-  ph.capture({
+  ph?.capture({
     distinctId: user.id,
     event: "scratch_pad_suggestion_confirmed_server",
     properties: { has_due_date: !!dueDate },
@@ -150,7 +150,7 @@ export async function dismissSuggestion(
     return { success: false, error: "Something went wrong. Please try again." };
 
   const ph = getPostHogServer();
-  ph.capture({
+  ph?.capture({
     distinctId: user.id,
     event: "scratch_pad_suggestion_dismissed_server",
   });

@@ -2,8 +2,8 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { TaskProvider } from "./components/task-context";
 import { TaskList } from "./components/task-list";
-import { AddTaskForm } from "./components/add-task-form";
 import { CheckInTrigger } from "./components/check-in-trigger";
+import { generateRecurringInstances } from "@/lib/actions/recurring-tasks";
 import type { Task } from "@/lib/types";
 
 export default async function DashboardPage() {
@@ -34,12 +34,13 @@ export default async function DashboardPage() {
       .eq("status", "pending")
       .is("due_date", null)
       .is("archived_at", null),
-    // Fetch all non-snoozed, non-archived tasks
+    // Fetch all non-snoozed, non-archived, non-skipped tasks
     supabase
       .from("tasks")
       .select("*")
       .eq("user_id", user.id)
       .neq("status", "snoozed")
+      .neq("status", "skipped")
       .is("archived_at", null)
       .order("created_at", { ascending: false }),
     // Fetch profile config for auto-archive
@@ -64,13 +65,15 @@ export default async function DashboardPage() {
       .then(() => {});
   }
 
+  // Generate recurring task instances (fire-and-forget, idempotent)
+  generateRecurringInstances().catch(() => {});
+
   return (
     <div className="space-y-6">
       <Suspense>
         <CheckInTrigger />
       </Suspense>
       <TaskProvider initialTasks={(tasks as Task[]) ?? []}>
-        <AddTaskForm />
         <TaskList />
       </TaskProvider>
     </div>

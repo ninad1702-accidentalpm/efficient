@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { format, parseISO, isToday, isBefore, startOfDay } from "date-fns";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Repeat, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,6 +19,8 @@ import { Button } from "@/components/ui/button";
 import { useTaskContext } from "./task-context";
 import { EditTaskDialog } from "./edit-task-dialog";
 import { SnoozePicker } from "./snooze-picker";
+import { RecurringScopeDialog } from "./recurring-scope-dialog";
+import { archiveRecurringTask } from "@/lib/actions/recurring-tasks";
 import type { Task } from "@/lib/types";
 
 interface TaskItemProps {
@@ -25,16 +28,41 @@ interface TaskItemProps {
 }
 
 export function TaskItem({ task }: TaskItemProps) {
-  const { toggleComplete, deleteTask } = useTaskContext();
+  const { toggleComplete, deleteTask, skipTask } = useTaskContext();
   const [editOpen, setEditOpen] = useState(false);
+  const [editScopeOpen, setEditScopeOpen] = useState(false);
+  const [deleteScopeOpen, setDeleteScopeOpen] = useState(false);
   const isCompleted = task.status === "completed";
+  const isRecurring = !!task.recurring_task_id;
 
   function handleToggle() {
     toggleComplete(task.id);
   }
 
-  function handleDelete() {
-    deleteTask(task.id);
+  function handleEditClick() {
+    if (isRecurring) {
+      setEditScopeOpen(true);
+    } else {
+      setEditOpen(true);
+    }
+  }
+
+  function handleDeleteClick() {
+    if (isRecurring) {
+      setDeleteScopeOpen(true);
+    } else {
+      deleteTask(task.id);
+    }
+  }
+
+  async function handleDeleteAllFuture() {
+    if (!task.recurring_task_id) return;
+    const result = await archiveRecurringTask(task.recurring_task_id);
+    if (!result.success) {
+      toast.error(result.error);
+    } else {
+      toast.success("Recurring task deleted");
+    }
   }
 
   function getDateBadge() {
@@ -85,6 +113,9 @@ export function TaskItem({ task }: TaskItemProps) {
         >
           {task.title}
         </span>
+        {isRecurring && (
+          <Repeat className="size-3.5 text-muted-foreground" />
+        )}
         {getDateBadge()}
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -99,20 +130,46 @@ export function TaskItem({ task }: TaskItemProps) {
             <MoreHorizontal className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setEditOpen(true)}>
+            <DropdownMenuItem onClick={handleEditClick}>
               <Pencil className="size-4" />
               Edit
             </DropdownMenuItem>
             {!isCompleted && <SnoozePicker taskId={task.id} />}
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+            <DropdownMenuItem variant="destructive" onClick={handleDeleteClick}>
               <Trash2 className="size-4" />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
       <EditTaskDialog task={task} open={editOpen} onOpenChange={setEditOpen} />
+
+      {isRecurring && (
+        <>
+          <RecurringScopeDialog
+            open={editScopeOpen}
+            onOpenChange={setEditScopeOpen}
+            action="edit"
+            task={task}
+            onJustThisOne={() => setEditOpen(true)}
+            onAllFuture={() => {
+              // For "all future", just open the edit dialog for now
+              // (edits this instance; full rule editing is in Settings)
+              setEditOpen(true);
+            }}
+          />
+          <RecurringScopeDialog
+            open={deleteScopeOpen}
+            onOpenChange={setDeleteScopeOpen}
+            action="delete"
+            task={task}
+            onJustThisOne={() => skipTask(task.id)}
+            onAllFuture={handleDeleteAllFuture}
+          />
+        </>
+      )}
     </>
   );
 }

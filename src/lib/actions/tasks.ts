@@ -287,6 +287,47 @@ export async function archiveCompletedTasks(
   return { success: true, data: count };
 }
 
+export async function skipTask(
+  taskId: string
+): Promise<ActionResult<void>> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user)
+    return {
+      success: false,
+      error: "Your session has expired. Please log in again.",
+    };
+
+  const { data: task } = await supabase
+    .from("tasks")
+    .select("title")
+    .eq("id", taskId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!task)
+    return {
+      success: false,
+      error: "This task could not be found. It may have been deleted.",
+    };
+
+  const { error } = await supabase
+    .from("tasks")
+    .update({ status: "skipped" as TaskStatus })
+    .eq("id", taskId)
+    .eq("user_id", user.id);
+
+  if (error)
+    return { success: false, error: "Something went wrong. Please try again." };
+
+  logActivity(user.id, "task_skipped", taskId, task.title);
+
+  revalidatePath("/");
+  return { success: true, data: undefined };
+}
+
 export async function snoozeTask(
   taskId: string,
   snoozeUntil: string

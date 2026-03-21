@@ -1,16 +1,19 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { isToday, isBefore, startOfDay, parseISO, format } from "date-fns";
 import {
   ArchiveIcon,
   ChevronDownIcon,
   ChevronUpIcon,
   InfoIcon,
+  Plus,
   SearchIcon,
   XIcon,
 } from "lucide-react";
 import { TaskItem } from "./task-item";
+import { AddTaskModal } from "./add-task-modal";
 import { useTaskContext } from "./task-context";
 import {
   Tooltip,
@@ -60,7 +63,7 @@ function FilterPill({
 }
 
 export function TaskList() {
-  const { tasks, archiveCompleted } = useTaskContext();
+  const { tasks, addTask, archiveCompleted } = useTaskContext();
 
   const [todayOpen, setTodayOpen] = useState(true);
   const [upcomingOpen, setUpcomingOpen] = useState(true);
@@ -74,6 +77,25 @@ export function TaskList() {
   const [upcomingFilter, setUpcomingFilter] = useState<UpcomingFilter>("all");
 
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [addModalRecurring, setAddModalRecurring] = useState(false);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Auto-open add modal with recurring checked when navigated with ?add=recurring
+  useEffect(() => {
+    if (searchParams.get("add") === "recurring") {
+      setAddModalRecurring(true);
+      setAddModalOpen(true);
+      router.replace("/", { scroll: false });
+    }
+  }, [searchParams, router]);
+
+  function handleAddModalChange(open: boolean) {
+    setAddModalOpen(open);
+    if (!open) setAddModalRecurring(false);
+  }
 
   function handleArchiveAll() {
     setArchiveConfirmOpen(false);
@@ -168,37 +190,47 @@ export function TaskList() {
 
   return (
     <div className="space-y-4">
-      {/* Search bar */}
-      <div className="flex justify-end">
-        {searchOpen ? (
-          <div className="flex w-full items-center gap-2">
-            <Input
-              ref={searchInputRef}
-              value={searchQuery}
-              onChange={(e) =>
-                setSearchQuery((e.target as HTMLInputElement).value)
-              }
-              placeholder="Search tasks..."
-              className="h-8"
-            />
+      {/* Header bar: search + add */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex-1">
+          {searchOpen ? (
+            <div className="flex items-center gap-2">
+              <Input
+                ref={searchInputRef}
+                value={searchQuery}
+                onChange={(e) =>
+                  setSearchQuery((e.target as HTMLInputElement).value)
+                }
+                placeholder="Search tasks..."
+                className="h-8"
+              />
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setSearchOpen(false);
+                }}
+                className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground"
+              >
+                <XIcon className="size-4" />
+              </button>
+            </div>
+          ) : (
             <button
-              onClick={() => {
-                setSearchQuery("");
-                setSearchOpen(false);
-              }}
-              className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground"
+              onClick={() => setSearchOpen(true)}
+              className="flex items-center gap-1.5 rounded-md p-1.5 text-muted-foreground hover:text-foreground text-sm"
             >
-              <XIcon className="size-4" />
+              <SearchIcon className="size-4" />
+              Search
             </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => setSearchOpen(true)}
-            className="rounded-md p-1.5 text-muted-foreground hover:text-foreground"
-          >
-            <SearchIcon className="size-4" />
-          </button>
-        )}
+          )}
+        </div>
+        <Button
+          onClick={() => setAddModalOpen(true)}
+          className="bg-[var(--accent)] text-[var(--accent-fg)] font-medium rounded-lg"
+        >
+          <Plus className="size-4" />
+          Add
+        </Button>
       </div>
 
       {/* Today section */}
@@ -361,6 +393,8 @@ export function TaskList() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AddTaskModal open={addModalOpen} onOpenChange={handleAddModalChange} initialRecurring={addModalRecurring} addTask={addTask} />
     </div>
   );
 }

@@ -64,7 +64,7 @@ ${textToProcess}
   const ph = getPostHogServer();
   const aiStart = performance.now();
 
-  ph.capture({
+  ph?.capture({
     distinctId: user.id,
     event: "scratch_pad_ai_request",
     properties: { text_length: textToProcess.length },
@@ -86,7 +86,7 @@ ${textToProcess}
     if (!res.ok) {
       const err = await res.text();
       console.error("OpenRouter API error:", res.status, err);
-      ph.capture({
+      ph?.capture({
         distinctId: user.id,
         event: "scratch_pad_ai_error",
         properties: { error: "AI service error", status_code: res.status },
@@ -155,7 +155,7 @@ ${textToProcess}
 
     const duplicatesFiltered = suggestions.length - newSuggestions.length;
 
-    ph.capture({
+    ph?.capture({
       distinctId: user.id,
       event: "scratch_pad_ai_response",
       properties: {
@@ -168,7 +168,7 @@ ${textToProcess}
     return NextResponse.json({ suggestions: saved ?? [] });
   } catch (error) {
     console.error("AI parsing error:", error);
-    ph.capture({
+    ph?.capture({
       distinctId: user.id,
       event: "scratch_pad_ai_error",
       properties: {

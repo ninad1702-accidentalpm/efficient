@@ -50,6 +50,11 @@ export function EditTaskDialog({ task, open, onOpenChange }: EditTaskDialogProps
           <DialogTitle>Edit Task</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          {task.recurring_task_id && (
+            <p className="text-xs text-muted-foreground bg-[var(--bg-elevated)] rounded-md px-2.5 py-1.5">
+              Editing this instance only
+            </p>
+          )}
           <div className="space-y-2">
             <Label htmlFor="edit-title">Title</Label>
             <Input

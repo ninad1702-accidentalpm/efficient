@@ -13,6 +13,7 @@ interface DatePickerProps {
   onSelect: (date: Date | undefined) => void;
   placeholder?: string;
   className?: string;
+  showSomeday?: boolean;
 }
 
 export function DatePicker({
@@ -20,6 +21,7 @@ export function DatePicker({
   onSelect,
   placeholder = "Pick a date",
   className,
+  showSomeday = false,
 }: DatePickerProps) {
   return (
     <Popover>
@@ -45,6 +47,15 @@ export function DatePicker({
           selected={date}
           onSelect={onSelect}
         />
+        {showSomeday && date && (
+          <button
+            type="button"
+            onClick={() => onSelect(undefined)}
+            className="w-full border-t border-[var(--border)] px-3 py-2 text-sm text-muted-foreground hover:text-[var(--text-primary)] transition-colors"
+          >
+            Someday
+          </button>
+        )}
       </PopoverContent>
     </Popover>
   );

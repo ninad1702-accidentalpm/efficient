@@ -2,7 +2,7 @@ export type ActionResult<T = void> =
   | { success: true; data: T }
   | { success: false; error: string };
 
-export type TaskStatus = "pending" | "someday" | "snoozed" | "completed";
+export type TaskStatus = "pending" | "someday" | "snoozed" | "completed" | "skipped";
 
 export interface Task {
   id: string;
@@ -14,8 +14,28 @@ export interface Task {
   completed_at: string | null;
   archived_at: string | null;
   source: "manual" | "ai" | "scratch_pad";
+  recurring_task_id: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export type RecurringFrequency = "daily" | "weekly" | "monthly" | "yearly";
+
+export type EndConditionType = "never" | "on_date" | "after_count";
+
+export interface RecurringTask {
+  id: string;
+  user_id: string;
+  title: string;
+  frequency: RecurringFrequency;
+  interval: number;
+  days_of_week: number[] | null;
+  day_of_month: number | null;
+  start_date: string;
+  end_date: string | null;
+  max_occurrences: number | null;
+  created_at: string;
+  archived_at: string | null;
 }
 
 export interface AiSuggestion {
@@ -56,4 +76,8 @@ export const ACTION_LABELS: Record<string, string> = {
   checkin_completed: "Completed",
   checkin_sent: "Sent",
   tasks_archived: "Archived",
+  task_skipped: "Skipped",
+  recurring_rule_created: "Created recurring rule",
+  recurring_rule_updated: "Updated recurring rule",
+  recurring_rule_archived: "Archived recurring rule",
 };

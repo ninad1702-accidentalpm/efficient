@@ -16,6 +16,7 @@ import {
   deleteTask as deleteTaskAction,
   updateTask as updateTaskAction,
   snoozeTask as snoozeTaskAction,
+  skipTask as skipTaskAction,
   archiveCompletedTasks as archiveAction,
 } from "@/lib/actions/tasks";
 
@@ -25,6 +26,7 @@ type OptimisticAction =
   | { type: "delete"; taskId: string }
   | { type: "update"; taskId: string; title: string; dueDate: string | null }
   | { type: "snooze"; taskId: string }
+  | { type: "skip"; taskId: string }
   | { type: "archive" };
 
 function taskReducer(tasks: Task[], action: OptimisticAction): Task[] {
@@ -58,6 +60,8 @@ function taskReducer(tasks: Task[], action: OptimisticAction): Task[] {
       });
     case "snooze":
       return tasks.filter((t) => t.id !== action.taskId);
+    case "skip":
+      return tasks.filter((t) => t.id !== action.taskId);
     case "archive":
       return tasks.filter((t) => t.status !== "completed");
   }
@@ -70,6 +74,7 @@ interface TaskContextValue {
   deleteTask: (taskId: string) => Promise<void>;
   updateTask: (taskId: string, title: string, dueDate: string | null) => Promise<void>;
   snoozeTask: (taskId: string, snoozeUntil: string) => Promise<void>;
+  skipTask: (taskId: string) => Promise<void>;
   archiveCompleted: () => Promise<void>;
 }
 
@@ -104,6 +109,7 @@ export function TaskProvider({
         completed_at: null,
         archived_at: null,
         source: "manual",
+        recurring_task_id: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -168,6 +174,18 @@ export function TaskProvider({
     [dispatchOptimistic]
   );
 
+  const skipTask = useCallback(
+    async (taskId: string) => {
+      dispatchOptimistic({ type: "skip", taskId });
+
+      const result = await skipTaskAction(taskId);
+      if (!result.success) {
+        toast.error(result.error);
+      }
+    },
+    [dispatchOptimistic]
+  );
+
   const archiveCompleted = useCallback(async () => {
     const completedCount = tasks.filter((t) => t.status === "completed").length;
     dispatchOptimistic({ type: "archive" });
@@ -189,6 +207,7 @@ export function TaskProvider({
         deleteTask,
         updateTask,
         snoozeTask,
+        skipTask,
         archiveCompleted,
       }}
     >

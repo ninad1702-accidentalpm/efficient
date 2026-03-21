@@ -11,7 +11,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    posthog.capture("$exception", {
+    posthog?.capture("$exception", {
       $exception_message: error.message,
       $exception_stack: error.stack,
     });
