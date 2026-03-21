@@ -17,7 +17,7 @@ export function SuggestionCard({
   onResolved,
 }: {
   suggestion: AiSuggestion;
-  onResolved: (id: string, accepted: boolean) => void;
+  onResolved: (id: string) => void;
 }) {
   const posthog = usePostHog();
   const [isPending, startTransition] = useTransition();
@@ -45,7 +45,7 @@ export function SuggestionCard({
         toast.error(result.error);
         return;
       }
-      onResolved(suggestion.id, true);
+      onResolved(suggestion.id);
     });
   }
 
@@ -57,7 +57,7 @@ export function SuggestionCard({
         toast.error(result.error);
         return;
       }
-      onResolved(suggestion.id, false);
+      onResolved(suggestion.id);
     });
   }
 

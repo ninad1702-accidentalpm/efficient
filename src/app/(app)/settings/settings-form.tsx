@@ -15,16 +15,19 @@ import { Label } from "@/components/ui/label";
 import {
   updateNotificationTimes,
   updateAutoArchiveDays,
+  updateScratchPadClearOnParse,
 } from "@/lib/actions/profile";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "@/components/theme-provider";
 import { FeedbackDialog } from "../components/feedback-dialog";
-import { MessageSquareMore, LogOut } from "lucide-react";
+import { MessageSquareMore, LogOut, Repeat } from "lucide-react";
+import Link from "next/link";
 
 interface SettingsFormProps {
   morningTime: string;
   eveningTime: string;
   autoArchiveDays: number | null;
+  scratchPadClearOnParse: boolean;
 }
 
 const selectClassName =
@@ -79,6 +82,7 @@ export function SettingsForm({
   morningTime,
   eveningTime,
   autoArchiveDays,
+  scratchPadClearOnParse,
 }: SettingsFormProps) {
   const router = useRouter();
   const posthog = usePostHog();
@@ -87,6 +91,7 @@ export function SettingsForm({
   const [archiveDays, setArchiveDays] = useState<number | null>(
     autoArchiveDays ?? 1
   );
+  const [clearOnParse, setClearOnParse] = useState(scratchPadClearOnParse);
   const [notifSaved, setNotifSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { theme, toggleTheme } = useTheme();
@@ -128,6 +133,14 @@ export function SettingsForm({
     setArchiveDays(clamped);
     startTransition(async () => {
       await updateAutoArchiveDays(clamped);
+    });
+  }
+
+  function handleClearOnParseChange(value: string) {
+    const newValue = value === "clear";
+    setClearOnParse(newValue);
+    startTransition(async () => {
+      await updateScratchPadClearOnParse(newValue);
     });
   }
 
@@ -235,6 +248,46 @@ export function SettingsForm({
             />
             <span className="text-sm text-muted-foreground">days</span>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[14px] p-6 ring-0">
+        <CardHeader>
+          <CardTitle className="font-display text-[1.1rem] text-[var(--text-primary)]">Scratch pad</CardTitle>
+          <CardDescription className="text-[0.8rem] text-[var(--text-muted)]">
+            Choose what happens to your scratch pad text after tasks are created.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="clear-on-parse">After adding tasks</Label>
+            <select
+              id="clear-on-parse"
+              value={clearOnParse ? "clear" : "keep"}
+              onChange={(e) => handleClearOnParseChange(e.target.value)}
+              className={selectClassName}
+            >
+              <option value="clear">Clear entire scratch pad</option>
+              <option value="keep">Keep entire content</option>
+            </select>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[14px] p-6 ring-0">
+        <CardHeader>
+          <CardTitle className="font-display text-[1.1rem] text-[var(--text-primary)]">Recurring Tasks</CardTitle>
+          <CardDescription className="text-[0.8rem] text-[var(--text-muted)]">
+            Manage your recurring task rules and schedules.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link href="/settings/recurring">
+            <Button variant="outline">
+              <Repeat className="size-4" />
+              Manage recurring tasks
+            </Button>
+          </Link>
         </CardContent>
       </Card>
 

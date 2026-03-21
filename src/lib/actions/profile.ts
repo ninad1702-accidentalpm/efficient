@@ -59,3 +59,16 @@ export async function updateAutoArchiveDays(days: number | null) {
     .update({ auto_archive_days: days })
     .eq("id", user.id);
 }
+
+export async function updateScratchPadClearOnParse(clearOnParse: boolean) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase
+    .from("profiles")
+    .update({ scratch_pad_clear_on_parse: clearOnParse })
+    .eq("id", user.id);
+}

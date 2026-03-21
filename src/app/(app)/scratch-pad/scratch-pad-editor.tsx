@@ -22,10 +22,12 @@ export function ScratchPadEditor({
   initialContent,
   initialLastProcessed,
   initialSuggestions,
+  clearOnParse,
 }: {
   initialContent: string;
   initialLastProcessed: string | null;
   initialSuggestions: AiSuggestion[];
+  clearOnParse: boolean;
 }) {
   const posthog = usePostHog();
   const [content, setContent] = useState(initialContent);
@@ -36,7 +38,6 @@ export function ScratchPadEditor({
   const isParsingRef = useRef(false);
   const latestContentRef = useRef(content);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
-  const [leftoverSource, setLeftoverSource] = useState<"suggest" | "add" | null>(null);
   const clearConfirmedRef = useRef(false);
 
   // Keep latestContentRef in sync so the parse callback sees the latest value
@@ -92,27 +93,23 @@ export function ScratchPadEditor({
           });
           setAddedCount(newSuggestions.length);
           setTimeout(() => setAddedCount(0), 3000);
-          // Remove source_text of each added task, clean up artifacts
-          let updated = latestContentRef.current;
-          for (const s of newSuggestions) {
-            if (s.source_text) {
-              updated = updated.replace(s.source_text, "");
-            }
+          if (clearOnParse) {
+            setContent("");
+            latestContentRef.current = "";
+
+            await saveScratchPad("");
           }
-          updated = updated
-            .replace(/\n{3,}/g, "\n\n")
-            .replace(/^[\s\-•*\d.)]+$/gm, "")
-            .replace(/\n{3,}/g, "\n\n")
-            .trim();
-          setContent(updated);
-          latestContentRef.current = updated;
-          setLeftoverSource(updated.length > 0 ? "add" : null);
-          await saveScratchPad(updated);
         } else {
           setSuggestions((prev) => [...newSuggestions, ...prev]);
           posthog?.capture("scratch_pad_suggestions_shown", {
             count: newSuggestions.length,
           });
+          if (clearOnParse) {
+            setContent("");
+            latestContentRef.current = "";
+
+            await saveScratchPad("");
+          }
         }
       }
 
@@ -146,19 +143,32 @@ export function ScratchPadEditor({
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
-      setStatus("saving");
       saveTimeoutRef.current = setTimeout(async () => {
+        setStatus("saving");
         try {
-          await saveScratchPad(value);
+          const result = await saveScratchPad(value);
+          if (!result.success) {
+            toast.error(result.error);
+            setStatus("idle");
+            return;
+          }
           posthog?.capture("scratch_pad_autosave_completed", {
             content_length: value.length,
           });
           setStatus("saved");
           setTimeout(() => setStatus("idle"), 1000);
-        } catch (err) {
-          posthog?.capture("scratch_pad_autosave_failed", {
-            error: err instanceof Error ? err.message : "Unknown error",
-          });
+        } catch {
+          // Transient failure (e.g. dev server hot-reload) — retry once
+          try {
+            const retry = await saveScratchPad(value);
+            if (retry.success) {
+              setStatus("saved");
+              setTimeout(() => setStatus("idle"), 1000);
+              return;
+            }
+          } catch {
+            // retry also failed
+          }
           toast.error("Your changes couldn't be saved.");
           setStatus("idle");
         }
@@ -171,7 +181,7 @@ export function ScratchPadEditor({
     posthog?.capture("scratch_pad_suggest_clicked", {
       content_length: latestContentRef.current.length,
     });
-    setLeftoverSource(null);
+
     parseContent(latestContentRef.current, lastProcessed);
   }
 
@@ -179,7 +189,7 @@ export function ScratchPadEditor({
     posthog?.capture("scratch_pad_add_clicked", {
       content_length: latestContentRef.current.length,
     });
-    setLeftoverSource(null);
+
     parseContent(latestContentRef.current, lastProcessed, true);
   }
 
@@ -192,7 +202,7 @@ export function ScratchPadEditor({
     setClearDialogOpen(false);
     setContent("");
     latestContentRef.current = "";
-    setLeftoverSource(null);
+
     await saveScratchPad("");
     await updateLastProcessed("");
     setLastProcessed("");
@@ -211,30 +221,11 @@ export function ScratchPadEditor({
   function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     const value = e.target.value;
     setContent(value);
-    setLeftoverSource(null);
+
     debouncedSave(value);
   }
 
-  function handleResolved(id: string, accepted: boolean) {
-    if (accepted) {
-      // Remove the source text of the accepted suggestion from the scratch pad
-      const suggestion = suggestions.find((s) => s.id === id);
-      if (suggestion?.source_text) {
-        setContent((prev) => {
-          const updated = prev
-            .replace(suggestion.source_text, "")
-            .replace(/\n{3,}/g, "\n\n")
-            // Remove lines that are only bullets, numbers, or punctuation remnants
-            .replace(/^[\s\-•*\d.)]+$/gm, "")
-            .replace(/\n{3,}/g, "\n\n")
-            .trim();
-          latestContentRef.current = updated;
-          saveScratchPad(updated);
-          setLeftoverSource(updated.length > 0 ? "suggest" : null);
-          return updated;
-        });
-      }
-    }
+  function handleResolved(id: string) {
     setSuggestions((prev) => prev.filter((s) => s.id !== id));
   }
 
@@ -250,11 +241,6 @@ export function ScratchPadEditor({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <div className="flex items-center justify-end">
-          <span className="text-xs text-muted-foreground">
-            {statusText}
-          </span>
-        </div>
         <Textarea
           id="scratch-pad"
           value={content}
@@ -295,17 +281,16 @@ export function ScratchPadEditor({
             <Trash2 className="size-3.5" />
             Clear
           </Button>
+          {statusText && (
+            <span className="text-xs text-muted-foreground ml-auto">
+              {statusText}
+            </span>
+          )}
         </div>
         {addedCount > 0 && (
           <div className="flex items-center gap-2 rounded-lg bg-green-500/10 px-4 py-3 text-sm font-medium text-green-400">
             <CheckCircle2 className="size-4 shrink-0" />
             {addedCount} task{addedCount === 1 ? "" : "s"} added to your to-do list
-          </div>
-        )}
-        {leftoverSource && content.trim().length > 0 && (
-          <div className="rounded-lg border border-border px-4 py-3 text-xs text-muted-foreground">
-            Some content wasn&apos;t turned into tasks — it may not contain clear action items.
-            You can edit it, clear it, or try clicking on &quot;{leftoverSource === "add" ? "Add tasks" : "Suggest tasks"}&quot; again.
           </div>
         )}
       </div>

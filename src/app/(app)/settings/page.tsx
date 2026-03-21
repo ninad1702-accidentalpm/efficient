@@ -12,7 +12,7 @@ export default async function SettingsPage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "morning_notification_time, evening_notification_time, auto_archive_days"
+      "morning_notification_time, evening_notification_time, auto_archive_days, scratch_pad_clear_on_parse"
     )
     .eq("id", user.id)
     .single();
@@ -23,6 +23,7 @@ export default async function SettingsPage() {
         morningTime={profile?.morning_notification_time ?? "10:00"}
         eveningTime={profile?.evening_notification_time ?? "21:00"}
         autoArchiveDays={profile?.auto_archive_days ?? null}
+        scratchPadClearOnParse={profile?.scratch_pad_clear_on_parse ?? true}
       />
     </div>
   );

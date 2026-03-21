@@ -10,8 +10,8 @@ export default async function ScratchPadPage() {
 
   if (!user) return null;
 
-  // Fetch scratch pad content and pending suggestions in parallel
-  const [{ data: scratchPad }, { data: suggestions }] = await Promise.all([
+  // Fetch scratch pad content, pending suggestions, and profile preference in parallel
+  const [{ data: scratchPad }, { data: suggestions }, { data: profile }] = await Promise.all([
     supabase
       .from("scratch_pad")
       .select("content, last_processed_content")
@@ -23,6 +23,11 @@ export default async function ScratchPadPage() {
       .eq("user_id", user.id)
       .is("user_action", null)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("profiles")
+      .select("scratch_pad_clear_on_parse")
+      .eq("id", user.id)
+      .single(),
   ]);
 
   return (
@@ -31,6 +36,7 @@ export default async function ScratchPadPage() {
         initialContent={scratchPad?.content ?? ""}
         initialLastProcessed={scratchPad?.last_processed_content ?? null}
         initialSuggestions={(suggestions as AiSuggestion[]) ?? []}
+        clearOnParse={profile?.scratch_pad_clear_on_parse ?? true}
       />
     </div>
   );
