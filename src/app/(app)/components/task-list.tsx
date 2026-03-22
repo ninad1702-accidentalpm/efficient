@@ -177,7 +177,7 @@ export function TaskList() {
       {/* Floating Action Button (mobile only) */}
       <button
         onClick={() => setAddModalOpen(true)}
-        className="fixed bottom-20 right-4 z-40 flex size-14 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)] shadow-lg transition-transform active:scale-95 lg:hidden"
+        className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-40 flex size-14 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)] shadow-lg transition-transform active:scale-95 lg:hidden"
       >
         <Plus className="size-6" />
       </button>

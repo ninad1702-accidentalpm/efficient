@@ -38,7 +38,7 @@ export default async function AppLayout({
 
       {/* Main content: offset on desktop for sidebar, padded bottom on mobile for bottom nav */}
       <div className="lg:pl-56">
-        <main className="mx-auto w-full max-w-2xl px-4 pb-20 pt-6 lg:pb-6">
+        <main className="mx-auto w-full max-w-2xl px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-6 lg:pb-6">
           {children}
         </main>
       </div>
