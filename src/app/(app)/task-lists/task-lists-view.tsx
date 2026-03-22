@@ -11,6 +11,7 @@ import {
 import { TaskItem } from "../components/task-item";
 import { AddTaskModal } from "../components/add-task-modal";
 import { RecurringManagementList } from "../components/recurring-management-list";
+import { EmptyStateUpcoming } from "../components/empty-state-upcoming";
 import { useTaskContext } from "../components/task-context";
 import { FilterPill } from "../components/filter-pill";
 import { useFeatureFlag } from "@/lib/use-feature-flag";
@@ -355,9 +356,7 @@ export function TaskListsView({ recurringRules }: TaskListsViewProps) {
             query || upcomingFilter !== "all" ? (
               noMatchMessage
             ) : (
-              <p className="px-3 py-4 text-center text-sm text-muted-foreground">
-                No upcoming tasks — you're all caught up!
-              </p>
+              <EmptyStateUpcoming />
             )
           ) : (
             upcomingTasks.map((task) => (

@@ -14,6 +14,7 @@ import { useTaskContext } from "./task-context";
 import { FilterPill } from "./filter-pill";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { EmptyStateToday } from "./empty-state-today";
 
 type TodayFilter = "all" | "overdue" | "due_today";
 
@@ -166,9 +167,7 @@ export function TaskList() {
         query || todayFilter !== "all" ? (
           noMatchMessage
         ) : (
-          <p className="px-3 py-4 text-center text-sm text-muted-foreground">
-            Nothing due today — nice!
-          </p>
+          <EmptyStateToday />
         )
       ) : (
         todayTasks.map((task) => <TaskItem key={task.id} task={task} viewContext="today" />)
