@@ -109,6 +109,7 @@ export async function createRecurringTask(params: {
   }
 
   revalidatePath("/");
+  revalidatePath("/task-lists");
   return { success: true, data: rule };
 }
 
@@ -169,6 +170,7 @@ export async function updateRecurringTask(
   logActivity(user.id, "recurring_rule_updated", null, params.title ?? "");
 
   revalidatePath("/");
+  revalidatePath("/task-lists");
   return { success: true, data: undefined };
 }
 
@@ -215,6 +217,7 @@ export async function archiveRecurringTask(
   }
 
   revalidatePath("/");
+  revalidatePath("/task-lists");
   return { success: true, data: undefined };
 }
 

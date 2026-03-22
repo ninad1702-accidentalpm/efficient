@@ -59,6 +59,7 @@ export async function addTask(
   });
 
   revalidatePath("/");
+  revalidatePath("/task-lists");
   return { success: true, data: data as Task };
 }
 
@@ -119,6 +120,7 @@ export async function toggleComplete(
   );
 
   revalidatePath("/");
+  revalidatePath("/task-lists");
   return { success: true, data: undefined };
 }
 
@@ -156,6 +158,7 @@ export async function deleteTask(
   }
 
   revalidatePath("/");
+  revalidatePath("/task-lists");
   return { success: true, data: undefined };
 }
 
@@ -213,6 +216,7 @@ export async function updateTask(
   });
 
   revalidatePath("/");
+  revalidatePath("/task-lists");
   return { success: true, data: undefined };
 }
 
@@ -284,6 +288,7 @@ export async function archiveCompletedTasks(
   }
 
   revalidatePath("/");
+  revalidatePath("/task-lists");
   return { success: true, data: count };
 }
 
@@ -325,6 +330,7 @@ export async function skipTask(
   logActivity(user.id, "task_skipped", taskId, task.title);
 
   revalidatePath("/");
+  revalidatePath("/task-lists");
   return { success: true, data: undefined };
 }
 
@@ -372,5 +378,6 @@ export async function snoozeTask(
   });
 
   revalidatePath("/");
+  revalidatePath("/task-lists");
   return { success: true, data: undefined };
 }

@@ -57,7 +57,7 @@ export function FeedbackDialog({ children }: FeedbackDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger render={<span />}>{children}</DialogTrigger>
+      <DialogTrigger nativeButton={false} render={<span />}>{children}</DialogTrigger>
       <DialogContent>
         {submitted ? (
           <div className="flex flex-col items-center gap-2 py-6 text-center">

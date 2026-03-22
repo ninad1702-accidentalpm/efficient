@@ -123,6 +123,7 @@ export async function confirmSuggestion(
   });
 
   revalidatePath("/");
+  revalidatePath("/task-lists");
   revalidatePath("/scratch-pad");
   return { success: true, data: task as Task };
 }
