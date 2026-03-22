@@ -53,6 +53,7 @@ export function TaskListsView({ recurringRules }: TaskListsViewProps) {
   const [upcomingFilter, setUpcomingFilter] = useState<UpcomingFilter>("all");
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [addModalInitialRecurring, setAddModalInitialRecurring] = useState(false);
 
   useEffect(() => {
     if (searchOpen && searchInputRef.current) {
@@ -64,6 +65,11 @@ export function TaskListsView({ recurringRules }: TaskListsViewProps) {
     setActiveTab(tab);
     setSearchOpen(false);
     setSearchQuery("");
+  }
+
+  function openAddModal(recurring = false) {
+    setAddModalInitialRecurring(recurring);
+    setAddModalOpen(true);
   }
 
   function handleArchiveAll() {
@@ -242,7 +248,7 @@ export function TaskListsView({ recurringRules }: TaskListsViewProps) {
                   <SearchIcon className="size-4" />
                 </button>
                 <Button
-                  onClick={() => setAddModalOpen(true)}
+                  onClick={() => openAddModal(false)}
                   className="bg-[var(--accent)] text-[var(--accent-fg)] font-medium rounded-lg"
                 >
                   <Plus className="size-4" />
@@ -251,6 +257,49 @@ export function TaskListsView({ recurringRules }: TaskListsViewProps) {
               </div>
             </>
           )}
+        </div>
+      )}
+      {recurringEnabled && activeTab === "recurring" && (
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
+            {searchOpen ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  ref={searchInputRef}
+                  value={searchQuery}
+                  onChange={(e) =>
+                    setSearchQuery((e.target as HTMLInputElement).value)
+                  }
+                  placeholder="Search recurring tasks..."
+                  className="h-8"
+                />
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchOpen(false);
+                  }}
+                  className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground"
+                >
+                  <XIcon className="size-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="flex items-center gap-1.5 rounded-md p-1.5 text-muted-foreground hover:text-foreground text-sm"
+              >
+                <SearchIcon className="size-4" />
+                Search
+              </button>
+            )}
+          </div>
+          <Button
+            onClick={() => openAddModal(true)}
+            className="bg-[var(--accent)] text-[var(--accent-fg)] font-medium rounded-lg"
+          >
+            <Plus className="size-4" />
+            Add
+          </Button>
         </div>
       )}
       {activeTab === "completed" && completedTasks.length > 0 && (
@@ -320,7 +369,7 @@ export function TaskListsView({ recurringRules }: TaskListsViewProps) {
 
       {/* Recurring tab */}
       {recurringEnabled && activeTab === "recurring" && (
-        <RecurringManagementList initialRules={recurringRules} />
+        <RecurringManagementList initialRules={recurringRules} searchQuery={query} hideAddButton />
       )}
 
       {/* Completed tab */}
@@ -366,7 +415,7 @@ export function TaskListsView({ recurringRules }: TaskListsViewProps) {
         </DialogContent>
       </Dialog>
 
-      <AddTaskModal open={addModalOpen} onOpenChange={setAddModalOpen} addTask={addTask} />
+      <AddTaskModal open={addModalOpen} onOpenChange={setAddModalOpen} addTask={addTask} initialRecurring={addModalInitialRecurring} />
     </div>
   );
 }

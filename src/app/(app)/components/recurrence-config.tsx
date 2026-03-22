@@ -23,7 +23,7 @@ export const defaultRecurrenceConfig: RecurrenceConfigState = {
   interval: 1,
   daysOfWeek: [],
   dayOfMonth: 1,
-  endCondition: "on_date",
+  endCondition: "never",
   endDate: undefined,
   maxOccurrences: 10,
   startDate: new Date(),

@@ -36,10 +36,14 @@ import type { RecurringTask } from "@/lib/types";
 
 interface RecurringManagementListProps {
   initialRules: RecurringTask[];
+  searchQuery?: string;
+  hideAddButton?: boolean;
 }
 
 export function RecurringManagementList({
   initialRules,
+  searchQuery,
+  hideAddButton,
 }: RecurringManagementListProps) {
   const posthog = usePostHog();
   const [rules, setRules] = useState(initialRules);
@@ -156,6 +160,10 @@ export function RecurringManagementList({
     setDeleteConfirmId(null);
   }
 
+  const filteredRules = searchQuery
+    ? rules.filter((r) => r.title.toLowerCase().includes(searchQuery))
+    : rules;
+
   if (rules.length === 0) {
     return (
       <div className="rounded-xl bg-surface p-8 text-center">
@@ -163,22 +171,34 @@ export function RecurringManagementList({
         <p className="text-sm text-muted-foreground mb-4">
           No recurring tasks yet.
         </p>
-        <Button onClick={() => setAddModalOpen(true)}>
-          Add recurring task
-        </Button>
-        <AddTaskModal
-          open={addModalOpen}
-          onOpenChange={setAddModalOpen}
-          initialRecurring
-        />
+        {!hideAddButton && (
+          <>
+            <Button onClick={() => setAddModalOpen(true)}>
+              Add recurring task
+            </Button>
+            <AddTaskModal
+              open={addModalOpen}
+              onOpenChange={setAddModalOpen}
+              initialRecurring
+            />
+          </>
+        )}
       </div>
+    );
+  }
+
+  if (filteredRules.length === 0) {
+    return (
+      <p className="px-3 py-4 text-center text-sm text-muted-foreground">
+        No recurring tasks match your search
+      </p>
     );
   }
 
   return (
     <>
       <div className="space-y-3">
-        {rules.map((rule) => {
+        {filteredRules.map((rule) => {
           const nextDue = getNextDueDate(rule, new Date());
           return (
             <div
