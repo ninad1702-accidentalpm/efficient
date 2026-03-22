@@ -249,7 +249,7 @@ export function TaskListsView({ recurringRules }: TaskListsViewProps) {
                 </button>
                 <Button
                   onClick={() => openAddModal(false)}
-                  className="bg-[var(--accent)] text-[var(--accent-fg)] font-medium rounded-lg"
+                  className="hidden bg-[var(--accent)] text-[var(--accent-fg)] font-medium rounded-lg lg:inline-flex"
                 >
                   <Plus className="size-4" />
                   Add
@@ -295,7 +295,7 @@ export function TaskListsView({ recurringRules }: TaskListsViewProps) {
           </div>
           <Button
             onClick={() => openAddModal(true)}
-            className="bg-[var(--accent)] text-[var(--accent-fg)] font-medium rounded-lg"
+            className="hidden bg-[var(--accent)] text-[var(--accent-fg)] font-medium rounded-lg lg:inline-flex"
           >
             <Plus className="size-4" />
             Add
@@ -390,6 +390,16 @@ export function TaskListsView({ recurringRules }: TaskListsViewProps) {
             ))
           )}
         </>
+      )}
+
+      {/* Floating Action Button (mobile only, hidden on Completed tab) */}
+      {(activeTab === "upcoming" || activeTab === "recurring") && (
+        <button
+          onClick={() => openAddModal(activeTab === "recurring")}
+          className="fixed bottom-20 right-4 z-40 flex size-14 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)] shadow-lg transition-transform active:scale-95 lg:hidden"
+        >
+          <Plus className="size-6" />
+        </button>
       )}
 
       <Dialog open={archiveConfirmOpen} onOpenChange={setArchiveConfirmOpen}>
