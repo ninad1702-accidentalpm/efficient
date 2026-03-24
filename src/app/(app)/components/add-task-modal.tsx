@@ -25,6 +25,7 @@ import {
 } from "./recurrence-config";
 import { createRecurringTask } from "@/lib/actions/recurring-tasks";
 import { useFeatureFlag } from "@/lib/use-feature-flag";
+import type { RecurringTask } from "@/lib/types";
 
 interface AddTaskModalProps {
   open: boolean;
@@ -32,9 +33,11 @@ interface AddTaskModalProps {
   initialRecurring?: boolean;
   /** When provided, used for non-recurring task creation. If omitted, the modal only supports recurring tasks. */
   addTask?: (title: string, dueDate: Date | undefined) => Promise<void>;
+  /** Called after a recurring task is successfully created */
+  onRecurringCreated?: (rule: RecurringTask) => void;
 }
 
-export function AddTaskModal({ open, onOpenChange, initialRecurring = false, addTask }: AddTaskModalProps) {
+export function AddTaskModal({ open, onOpenChange, initialRecurring = false, addTask, onRecurringCreated }: AddTaskModalProps) {
   const posthog = usePostHog();
   const recurringEnabled = useFeatureFlag("recurring-tasks");
 
@@ -121,6 +124,7 @@ export function AddTaskModal({ open, onOpenChange, initialRecurring = false, add
         return;
       }
       toast.success("Recurring task created");
+      onRecurringCreated?.(result.data);
     } else if (addTask) {
       await addTask(trimmed, dueDate);
     }

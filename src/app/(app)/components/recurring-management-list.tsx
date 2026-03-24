@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useImperativeHandle, useState, type Ref } from "react";
 import { format } from "date-fns";
 import { Pencil, Repeat, Trash2 } from "lucide-react";
 import { usePostHog } from "posthog-js/react";
@@ -34,16 +34,22 @@ import {
 } from "@/lib/recurring";
 import type { RecurringTask } from "@/lib/types";
 
+export interface RecurringManagementListHandle {
+  addRule: (rule: RecurringTask) => void;
+}
+
 interface RecurringManagementListProps {
   initialRules: RecurringTask[];
   searchQuery?: string;
   hideAddButton?: boolean;
+  ref?: Ref<RecurringManagementListHandle>;
 }
 
 export function RecurringManagementList({
   initialRules,
   searchQuery,
   hideAddButton,
+  ref,
 }: RecurringManagementListProps) {
   const posthog = usePostHog();
   const [rules, setRules] = useState(initialRules);
@@ -55,6 +61,12 @@ export function RecurringManagementList({
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    addRule(rule: RecurringTask) {
+      setRules((prev) => [rule, ...prev]);
+    },
+  }));
 
   useEffect(() => {
     posthog?.capture("recurring_management_viewed");
@@ -180,6 +192,7 @@ export function RecurringManagementList({
               open={addModalOpen}
               onOpenChange={setAddModalOpen}
               initialRecurring
+              onRecurringCreated={(rule) => setRules((prev) => [rule, ...prev])}
             />
           </>
         )}

@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { TaskItem } from "../components/task-item";
 import { AddTaskModal } from "../components/add-task-modal";
-import { RecurringManagementList } from "../components/recurring-management-list";
+import { RecurringManagementList, type RecurringManagementListHandle } from "../components/recurring-management-list";
 import { EmptyStateUpcoming } from "../components/empty-state-upcoming";
 import { useTaskContext } from "../components/task-context";
 import { FilterPill } from "@/components/ui/filter-pill";
@@ -55,6 +55,7 @@ export function TaskListsView({ recurringRules }: TaskListsViewProps) {
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [addModalInitialRecurring, setAddModalInitialRecurring] = useState(false);
+  const recurringListRef = useRef<RecurringManagementListHandle>(null);
 
   useEffect(() => {
     if (searchOpen && searchInputRef.current) {
@@ -368,7 +369,7 @@ export function TaskListsView({ recurringRules }: TaskListsViewProps) {
 
       {/* Recurring tab */}
       {recurringEnabled && activeTab === "recurring" && (
-        <RecurringManagementList initialRules={recurringRules} searchQuery={query} hideAddButton />
+        <RecurringManagementList ref={recurringListRef} initialRules={recurringRules} searchQuery={query} hideAddButton />
       )}
 
       {/* Completed tab */}
@@ -424,7 +425,7 @@ export function TaskListsView({ recurringRules }: TaskListsViewProps) {
         </DialogContent>
       </Dialog>
 
-      <AddTaskModal open={addModalOpen} onOpenChange={setAddModalOpen} addTask={addTask} initialRecurring={addModalInitialRecurring} />
+      <AddTaskModal open={addModalOpen} onOpenChange={setAddModalOpen} addTask={addTask} initialRecurring={addModalInitialRecurring} onRecurringCreated={(rule) => recurringListRef.current?.addRule(rule)} />
     </div>
   );
 }
