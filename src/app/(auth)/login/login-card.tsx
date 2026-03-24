@@ -11,7 +11,7 @@ export function LoginCard() {
 
   // Determine initial mode from query params
   const initialMode = searchParams.get("mode") === "signup" || searchParams.get("email") ? "signup" : "login";
-  const [mode, setMode] = useState<"login" | "signup">(initialMode);
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">(initialMode);
 
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
@@ -25,7 +25,12 @@ export function LoginCard() {
   const [signupConfirm, setSignupConfirm] = useState("");
   const [signupError, setSignupError] = useState<string | null>(null);
   const [signupLoading, setSignupLoading] = useState(false);
-  const [signupSuccess, setSignupSuccess] = useState(false);
+
+  // Forgot password state
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotError, setForgotError] = useState<string | null>(null);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSuccess, setForgotSuccess] = useState(false);
 
   // Pre-fill email from query param
   useEffect(() => {
@@ -96,13 +101,51 @@ export function LoginCard() {
     });
 
     if (error) {
-      setSignupError("Something went wrong. Please check your details and try again.");
+      console.error("Signup error:", error.message, error);
+      const msg = error.message.toLowerCase();
+      if (msg.includes("user already registered")) {
+        setSignupError("An account with this email already exists. Try logging in instead.");
+      } else if (msg.includes("rate limit")) {
+        setSignupError("Too many signup attempts. Please try again later.");
+      } else if (msg.includes("signups not allowed")) {
+        setSignupError("Signups are currently disabled.");
+      } else {
+        setSignupError("Something went wrong. Please check your details and try again.");
+      }
       setSignupLoading(false);
       return;
     }
 
     setSignupLoading(false);
-    setSignupSuccess(true);
+    router.push("/today");
+    router.refresh();
+  }
+
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setForgotLoading(true);
+    setForgotError(null);
+
+    const email = forgotEmail.trim();
+    if (!email) {
+      setForgotError("Please enter your email.");
+      setForgotLoading(false);
+      return;
+    }
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+    });
+
+    if (error) {
+      setForgotError("Something went wrong. Please try again.");
+      setForgotLoading(false);
+      return;
+    }
+
+    setForgotLoading(false);
+    setForgotSuccess(true);
   }
 
   return (
@@ -125,7 +168,78 @@ export function LoginCard() {
             </Link>
           </div>
 
-          {mode === "login" ? (
+          {mode === "forgot" ? (
+            forgotSuccess ? (
+              <>
+                {/* ── Forgot password success ── */}
+                <h2 className="font-[family-name:var(--font-barlow-condensed)] text-[2rem] font-900 uppercase leading-none text-[#1A1A1A]">
+                  Check your email
+                </h2>
+                <div className="mt-6 rounded-lg bg-[#C9A227]/10 p-4">
+                  <p className="font-[family-name:var(--font-barlow)] text-sm text-[#6B6B6B]">
+                    We sent a password reset link to <strong className="text-[#1A1A1A]">{forgotEmail}</strong>.
+                    Click the link to set a new password.
+                  </p>
+                </div>
+                <p className="mt-6 text-center font-[family-name:var(--font-barlow)] text-sm text-[#9A9A9A]">
+                  <button
+                    onClick={() => { setForgotSuccess(false); setForgotEmail(""); setMode("login"); }}
+                    className="font-medium text-[#C9A227] underline underline-offset-2 hover:text-[#B89220]"
+                  >
+                    &larr; Back to login
+                  </button>
+                </p>
+              </>
+            ) : (
+              <>
+                {/* ── Forgot password form ── */}
+                <h2 className="font-[family-name:var(--font-barlow-condensed)] text-[2rem] font-900 uppercase leading-none text-[#1A1A1A]">
+                  Reset password
+                </h2>
+                <p className="mt-1 font-[family-name:var(--font-barlow)] text-sm text-[#9A9A9A]">
+                  Enter your email and we&apos;ll send a reset link.
+                </p>
+
+                <form onSubmit={handleForgotPassword} autoComplete="off" className="mt-6 space-y-4">
+                  {forgotError && (
+                    <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                      {forgotError}
+                    </div>
+                  )}
+                  <div className="space-y-1.5">
+                    <label htmlFor="forgot-email" className="font-[family-name:var(--font-barlow)] text-xs font-medium uppercase tracking-wider text-[#6B6B6B]">
+                      Email
+                    </label>
+                    <input
+                      id="forgot-email"
+                      type="email"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      required
+                      placeholder="you@example.com"
+                      className="h-11 w-full rounded-lg border border-[#D8D4CC] bg-white px-3 font-[family-name:var(--font-barlow)] text-sm text-[#1A1A1A] placeholder:text-[#B0ACA4] outline-none transition-colors focus:border-[#C9A227] focus:ring-2 focus:ring-[#C9A227]/20"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={forgotLoading}
+                    className="h-11 w-full rounded-lg bg-[#1A1A1A] font-[family-name:var(--font-barlow)] text-sm font-medium text-[#F5F2EB] transition-colors hover:bg-[#333] disabled:opacity-60"
+                  >
+                    {forgotLoading ? "Sending..." : "Send reset link"}
+                  </button>
+                </form>
+
+                <p className="mt-6 text-center font-[family-name:var(--font-barlow)] text-sm text-[#9A9A9A]">
+                  <button
+                    onClick={() => { setForgotError(null); setMode("login"); }}
+                    className="font-medium text-[#C9A227] underline underline-offset-2 hover:text-[#B89220]"
+                  >
+                    &larr; Back to login
+                  </button>
+                </p>
+              </>
+            )
+          ) : mode === "login" ? (
             <>
               {/* ── Login section ── */}
               <h2 className="font-[family-name:var(--font-barlow-condensed)] text-[2rem] font-900 uppercase leading-none text-[#1A1A1A]">
@@ -160,9 +274,13 @@ export function LoginCard() {
                     <label htmlFor="login-password" className="font-[family-name:var(--font-barlow)] text-xs font-medium uppercase tracking-wider text-[#6B6B6B]">
                       Password
                     </label>
-                    <span className="font-[family-name:var(--font-barlow)] text-xs text-[#B0ACA4]">
+                    <button
+                      type="button"
+                      onClick={() => { setForgotEmail(loginEmail); setMode("forgot"); }}
+                      className="font-[family-name:var(--font-barlow)] text-xs text-[#B0ACA4] transition-colors hover:text-[#C9A227]"
+                    >
                       Forgot?
-                    </span>
+                    </button>
                   </div>
                   <input
                     id="login-password"
@@ -189,28 +307,6 @@ export function LoginCard() {
                   className="font-medium text-[#C9A227] underline underline-offset-2 hover:text-[#B89220]"
                 >
                   Sign up
-                </button>
-              </p>
-            </>
-          ) : signupSuccess ? (
-            <>
-              {/* ── Signup success ── */}
-              <h2 className="font-[family-name:var(--font-barlow-condensed)] text-[2rem] font-900 uppercase leading-none text-[#1A1A1A]">
-                Check your email
-              </h2>
-              <div className="mt-6 rounded-lg bg-[#C9A227]/10 p-4">
-                <p className="font-[family-name:var(--font-barlow)] text-sm text-[#6B6B6B]">
-                  We sent a confirmation link to <strong className="text-[#1A1A1A]">{signupEmail}</strong>.
-                  Click the link to activate your account.
-                </p>
-              </div>
-              <p className="mt-6 text-center font-[family-name:var(--font-barlow)] text-sm text-[#9A9A9A]">
-                Already confirmed?{" "}
-                <button
-                  onClick={() => { setSignupSuccess(false); setMode("login"); }}
-                  className="font-medium text-[#C9A227] underline underline-offset-2 hover:text-[#B89220]"
-                >
-                  Log in
                 </button>
               </p>
             </>

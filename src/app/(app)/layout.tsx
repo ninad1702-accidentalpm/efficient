@@ -20,11 +20,15 @@ export default async function AppLayout({
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("onboarding_completed")
     .eq("id", user.id)
     .single();
+
+  if (profileError && profileError.code === "PGRST116") {
+    await supabase.from("profiles").insert({ id: user.id });
+  }
 
   const onboardingCompleted = profile?.onboarding_completed ?? false;
 
