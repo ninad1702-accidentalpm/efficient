@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
 import { getPostHogServer } from "@/lib/posthog-server";
+import { getTodayInTimezone } from "@/lib/recurring";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -40,7 +42,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ suggestions: [] });
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("timezone")
+    .eq("id", user.id)
+    .single();
+
+  const today = format(getTodayInTimezone(profile?.timezone), "yyyy-MM-dd");
 
   const prompt = `You are a task extraction assistant. Extract actionable tasks from the following free-form text. For each task, provide a concise title and an optional due date (YYYY-MM-DD format) if one is mentioned or can be reasonably inferred.
 
