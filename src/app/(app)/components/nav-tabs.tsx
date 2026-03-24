@@ -18,7 +18,7 @@ import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { label: "Today", href: "/", icon: CheckSquare, showInMobile: true },
+  { label: "Today", href: "/today", icon: CheckSquare, showInMobile: true },
   { label: "Task lists", href: "/task-lists", icon: ListChecks, showInMobile: true },
   { label: "Scratch pad", href: "/scratch-pad", icon: StickyNote, showInMobile: true },
   { label: "Settings", href: "/settings", icon: Settings, showInMobile: true },
@@ -34,7 +34,7 @@ export function NavTabs({ userEmail, onLogout }: NavTabsProps) {
   const { theme, toggleTheme } = useTheme();
 
   function isActive(href: string) {
-    return href === "/" ? pathname === "/" : pathname.startsWith(href);
+    return href === "/today" ? pathname === "/today" : pathname.startsWith(href);
   }
 
   return (
@@ -66,8 +66,8 @@ export function NavTabs({ userEmail, onLogout }: NavTabsProps) {
       {/* ── Desktop left sidebar (lg and above) ── */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-56 flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-surface)] lg:flex">
         {/* App name */}
-        <div className="px-5 py-6">
-          <h1 className="font-display text-[1.4rem] text-[var(--text-primary)]">Efficient</h1>
+        <div className="px-5 py-6 border-b border-[var(--border-subtle)]">
+          <h1 className="font-display text-[1.25rem] text-[var(--text-primary)]">Efficient</h1>
         </div>
 
         {/* Nav items */}
@@ -79,7 +79,7 @@ export function NavTabs({ userEmail, onLogout }: NavTabsProps) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 border-l-2 px-3 py-2 text-[0.875rem] font-medium transition-colors",
+                  "flex items-center gap-3 border-l-[3px] px-3 py-2 text-[0.875rem] font-medium transition-colors",
                   active
                     ? "border-[var(--accent)] bg-[var(--bg-elevated)] text-[var(--text-primary)]"
                     : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"

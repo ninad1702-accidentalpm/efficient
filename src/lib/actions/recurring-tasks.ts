@@ -108,7 +108,7 @@ export async function createRecurringTask(params: {
     // PostHog not configured — skip analytics
   }
 
-  revalidatePath("/");
+  revalidatePath("/today");
   revalidatePath("/task-lists");
   return { success: true, data: rule };
 }
@@ -169,7 +169,7 @@ export async function updateRecurringTask(
 
   logActivity(user.id, "recurring_rule_updated", null, params.title ?? "");
 
-  revalidatePath("/");
+  revalidatePath("/today");
   revalidatePath("/task-lists");
   return { success: true, data: undefined };
 }
@@ -216,7 +216,7 @@ export async function archiveRecurringTask(
     logActivity(user.id, "recurring_rule_archived", null, rule.title);
   }
 
-  revalidatePath("/");
+  revalidatePath("/today");
   revalidatePath("/task-lists");
   return { success: true, data: undefined };
 }

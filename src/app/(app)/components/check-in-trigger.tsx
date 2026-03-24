@@ -35,7 +35,7 @@ export function CheckInTrigger() {
       tasks={tasks}
       onClose={() => {
         setTasks(null);
-        router.replace("/", { scroll: false });
+        router.replace("/today", { scroll: false });
       }}
     />
   );

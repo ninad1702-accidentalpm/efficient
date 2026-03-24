@@ -13,7 +13,7 @@ import { AddTaskModal } from "../components/add-task-modal";
 import { RecurringManagementList } from "../components/recurring-management-list";
 import { EmptyStateUpcoming } from "../components/empty-state-upcoming";
 import { useTaskContext } from "../components/task-context";
-import { FilterPill } from "../components/filter-pill";
+import { FilterPill } from "@/components/ui/filter-pill";
 import { useFeatureFlag } from "@/lib/use-feature-flag";
 import type { RecurringTask } from "@/lib/types";
 import { Button } from "@/components/ui/button";

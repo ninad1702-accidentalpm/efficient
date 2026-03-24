@@ -58,7 +58,7 @@ export async function addTask(
     due_date: dueDate,
   });
 
-  revalidatePath("/");
+  revalidatePath("/today");
   revalidatePath("/task-lists");
   return { success: true, data: data as Task };
 }
@@ -119,7 +119,7 @@ export async function toggleComplete(
     task.title
   );
 
-  revalidatePath("/");
+  revalidatePath("/today");
   revalidatePath("/task-lists");
   return { success: true, data: undefined };
 }
@@ -157,7 +157,7 @@ export async function deleteTask(
     logActivity(user.id, "task_deleted", taskId, task.title);
   }
 
-  revalidatePath("/");
+  revalidatePath("/today");
   revalidatePath("/task-lists");
   return { success: true, data: undefined };
 }
@@ -215,7 +215,7 @@ export async function updateTask(
     due_date: dueDate,
   });
 
-  revalidatePath("/");
+  revalidatePath("/today");
   revalidatePath("/task-lists");
   return { success: true, data: undefined };
 }
@@ -287,7 +287,7 @@ export async function archiveCompletedTasks(
     });
   }
 
-  revalidatePath("/");
+  revalidatePath("/today");
   revalidatePath("/task-lists");
   return { success: true, data: count };
 }
@@ -329,7 +329,7 @@ export async function skipTask(
 
   logActivity(user.id, "task_skipped", taskId, task.title);
 
-  revalidatePath("/");
+  revalidatePath("/today");
   revalidatePath("/task-lists");
   return { success: true, data: undefined };
 }
@@ -377,7 +377,7 @@ export async function snoozeTask(
     snooze_until: snoozeUntil,
   });
 
-  revalidatePath("/");
+  revalidatePath("/today");
   revalidatePath("/task-lists");
   return { success: true, data: undefined };
 }

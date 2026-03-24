@@ -1,12 +1,12 @@
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { TaskProvider } from "./components/task-context";
-import { TaskList } from "./components/task-list";
-import { CheckInTrigger } from "./components/check-in-trigger";
+import { TaskProvider } from "../components/task-context";
+import { TaskList } from "../components/task-list";
+import { CheckInTrigger } from "../components/check-in-trigger";
 import { generateRecurringInstances } from "@/lib/actions/recurring-tasks";
 import type { Task } from "@/lib/types";
 
-export default async function DashboardPage() {
+export default async function TodayPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -70,6 +70,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <h1 className="font-display text-2xl">Today</h1>
       <Suspense>
         <CheckInTrigger />
       </Suspense>

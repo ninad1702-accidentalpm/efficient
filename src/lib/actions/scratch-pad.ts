@@ -122,7 +122,7 @@ export async function confirmSuggestion(
     properties: { has_due_date: !!dueDate },
   });
 
-  revalidatePath("/");
+  revalidatePath("/today");
   revalidatePath("/task-lists");
   revalidatePath("/scratch-pad");
   return { success: true, data: task as Task };

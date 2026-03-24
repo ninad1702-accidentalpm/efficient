@@ -11,7 +11,7 @@ import {
 import { TaskItem } from "./task-item";
 import { AddTaskModal } from "./add-task-modal";
 import { useTaskContext } from "./task-context";
-import { FilterPill } from "./filter-pill";
+import { FilterPill } from "@/components/ui/filter-pill";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyStateToday } from "./empty-state-today";
@@ -38,7 +38,7 @@ export function TaskList() {
     if (searchParams.get("add") === "recurring") {
       setAddModalRecurring(true);
       setAddModalOpen(true);
-      router.replace("/", { scroll: false });
+      router.replace("/today", { scroll: false });
     }
   }, [searchParams, router]);
 

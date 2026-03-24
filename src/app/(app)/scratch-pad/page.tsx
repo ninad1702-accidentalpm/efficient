@@ -32,6 +32,7 @@ export default async function ScratchPadPage() {
 
   return (
     <div className="space-y-6">
+      <h1 className="font-display text-2xl">Scratch pad</h1>
       <ScratchPadEditor
         initialContent={scratchPad?.content ?? ""}
         initialLastProcessed={scratchPad?.last_processed_content ?? null}

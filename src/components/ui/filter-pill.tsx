@@ -13,10 +13,10 @@ export function FilterPill({
         e.stopPropagation();
         onClick();
       }}
-      className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors border ${
+      className={`h-7 rounded-full px-3 text-xs font-medium tracking-[0.04em] transition-colors border ${
         active
           ? "bg-[var(--accent)] text-[var(--accent-fg)] border-transparent"
-          : "bg-[var(--bg-elevated)] border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          : "bg-transparent border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
       }`}
     >
       {label}

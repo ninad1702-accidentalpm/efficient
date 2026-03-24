@@ -99,7 +99,7 @@ export function SettingsForm({
     posthog?.reset();
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/login");
+    router.push("/");
     router.refresh();
   }
 
@@ -147,7 +147,7 @@ export function SettingsForm({
     <div className="space-y-6">
       <Card className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[14px] p-6 ring-0">
         <CardHeader>
-          <CardTitle className="font-display text-[1.1rem] text-[var(--text-primary)]">Appearance</CardTitle>
+          <CardTitle className="text-[1rem] text-[var(--text-primary)]">Appearance</CardTitle>
           <CardDescription className="text-[0.8rem] text-[var(--text-muted)]">
             Customize how Efficient looks.
           </CardDescription>
@@ -183,7 +183,7 @@ export function SettingsForm({
 
       <Card className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[14px] p-6 ring-0">
         <CardHeader>
-          <CardTitle className="font-display text-[1.1rem] text-[var(--text-primary)]">Notifications</CardTitle>
+          <CardTitle className="text-[1rem] text-[var(--text-primary)]">Notifications</CardTitle>
           <CardDescription className="text-[0.8rem] text-[var(--text-muted)]">
             Set when you receive morning and evening check-in reminders.
           </CardDescription>
@@ -226,7 +226,7 @@ export function SettingsForm({
 
       <Card className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[14px] p-6 ring-0">
         <CardHeader>
-          <CardTitle className="font-display text-[1.1rem] text-[var(--text-primary)]">Auto-clear completed tasks</CardTitle>
+          <CardTitle className="text-[1rem] text-[var(--text-primary)]">Auto-clear completed tasks</CardTitle>
           <CardDescription className="text-[0.8rem] text-[var(--text-muted)]">
             Automatically clear completed tasks after a set number of days.
           </CardDescription>
@@ -252,7 +252,7 @@ export function SettingsForm({
 
       <Card className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[14px] p-6 ring-0">
         <CardHeader>
-          <CardTitle className="font-display text-[1.1rem] text-[var(--text-primary)]">Scratch pad</CardTitle>
+          <CardTitle className="text-[1rem] text-[var(--text-primary)]">Scratch pad</CardTitle>
           <CardDescription className="text-[0.8rem] text-[var(--text-muted)]">
             Choose what happens to your scratch pad text after tasks are created.
           </CardDescription>
@@ -275,7 +275,7 @@ export function SettingsForm({
 
       <Card className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[14px] p-6 ring-0">
         <CardHeader>
-          <CardTitle className="font-display text-[1.1rem] text-[var(--text-primary)]">Feedback</CardTitle>
+          <CardTitle className="text-[1rem] text-[var(--text-primary)]">Feedback</CardTitle>
           <CardDescription className="text-[0.8rem] text-[var(--text-muted)]">
             Found a bug or have a suggestion? We&apos;d love to hear from you.
           </CardDescription>

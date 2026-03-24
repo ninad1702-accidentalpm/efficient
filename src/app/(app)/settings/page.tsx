@@ -19,6 +19,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-6">
+      <h1 className="font-display text-2xl">Settings</h1>
       <SettingsForm
         morningTime={profile?.morning_notification_time ?? "10:00"}
         eveningTime={profile?.evening_notification_time ?? "21:00"}

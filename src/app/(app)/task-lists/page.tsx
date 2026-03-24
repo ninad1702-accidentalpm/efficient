@@ -69,8 +69,11 @@ export default async function TaskListsPage() {
   // Only the Today page (/) triggers that to avoid duplication risk.
 
   return (
-    <TaskProvider initialTasks={(tasks as Task[]) ?? []}>
-      <TaskListsView recurringRules={recurringRules} />
-    </TaskProvider>
+    <div className="space-y-6">
+      <h1 className="font-display text-2xl">Task lists</h1>
+      <TaskProvider initialTasks={(tasks as Task[]) ?? []}>
+        <TaskListsView recurringRules={recurringRules} />
+      </TaskProvider>
+    </div>
   );
 }
