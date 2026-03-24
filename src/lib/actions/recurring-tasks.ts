@@ -7,6 +7,7 @@ import {
   shouldGenerateToday,
   hasReachedMaxOccurrences,
   isPastEndDate,
+  getTodayInTimezone,
 } from "@/lib/recurring";
 import type {
   ActionResult,
@@ -76,8 +77,15 @@ export async function createRecurringTask(params: {
 
   const rule = data as RecurringTask;
 
+  // Fetch user's timezone so "today" matches their local calendar day
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("timezone")
+    .eq("id", user.id)
+    .single();
+
   // Generate first instance if today matches
-  const today = startOfDay(new Date());
+  const today = getTodayInTimezone(profile?.timezone);
   if (shouldGenerateToday(rule, today)) {
     const todayStr = format(today, "yyyy-MM-dd");
     await supabase.from("tasks").insert({
@@ -246,7 +254,15 @@ export async function generateRecurringInstances(): Promise<void> {
   if (!user) return;
 
   const posthog = getPostHogServer();
-  const today = startOfDay(new Date());
+
+  // Use the user's timezone so "today" matches their local calendar day
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("timezone")
+    .eq("id", user.id)
+    .single();
+
+  const today = getTodayInTimezone(profile?.timezone);
   const todayStr = format(today, "yyyy-MM-dd");
 
   // Fetch all active recurring rules

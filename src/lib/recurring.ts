@@ -205,3 +205,19 @@ export function isPastEndDate(rule: RecurringTask, today: Date): boolean {
   if (!rule.end_date) return false;
   return isAfter(startOfDay(today), startOfDay(parseISO(rule.end_date)));
 }
+
+/**
+ * Get "today" in a specific IANA timezone (e.g. "America/Los_Angeles").
+ * Returns a UTC Date at midnight representing that calendar date.
+ * Falls back to server's local Date if timezone is missing.
+ */
+export function getTodayInTimezone(timezone?: string | null): Date {
+  if (!timezone) return startOfDay(new Date());
+  const dateStr = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date()); // "2026-03-25"
+  return startOfDay(parseISO(dateStr));
+}
